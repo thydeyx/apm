@@ -1,0 +1,150 @@
+{% extends "base/page-base.html" %}
+{% block title %}节点状态监测{% endblock %}
+{% load staticfiles %}
+
+{% block css %}
+{#<link rel="stylesheet" href="{% static "css/compiled/nodeConfig.css" %}"rel="stylesheet" type="text/css" />#}
+    <script src="{% static "js/echarts.min.js"%}"></script>
+{% endblock %}
+
+{% block side-nav %}
+{% include "side-nav/side-nav-config.html" %}
+{% endblock %}
+
+{% block content %}
+
+<!-- main container -->
+<div class="content container">
+    <div class="row">
+        <ol class="breadcrumb">
+            <span>当前所在位置：</span>
+            <li>
+                <a>配置管理</a>
+            </li>
+            <li class="active">节点状态监测</li>
+        </ol>
+    </div>
+
+    <div class="row"> 
+        <div class="col-md-12">
+            <div id="statediv" class="main-box" style="width: 100%;height: 800px;">
+            </div>
+            <script>
+                var getState,dataReceive=[],data=[],n=0;
+                var myChart = echarts.init(document.getElementById('statediv'));
+                myChart.showLoading();
+                getState = window.setInterval(function(){
+                    $.ajax({
+                        url:'/config/inTimeState/',
+                        type:'post',
+                        success:function (dataJSON) {
+                            dataReceive = eval('('+dataJSON+')');
+                            n=dataReceive.length;
+                        }
+                    });
+                },5000);
+                var i= 0,data=[];
+                var grids,xAxes,yAxes,series,titles,seriesIndexs,rowNumber;
+                var option;
+                var setData=window.setInterval(function(){
+                    grids = [];
+                    xAxes = [];
+                    yAxes = [];
+                    series = [];
+                    titles = [];
+                    seriesIndexs = [];
+                    var option;
+                    if(i==5){
+                                    i=0;
+                                }
+                    for(var j=0;j<n;j++){
+                        data[j]=[["cpu",dataReceive[j]["cpu"][i],"cpu",dataReceive[j]["nodeName"]],["io",dataReceive[j]["io"][i],"io",dataReceive[j]["flag"]],
+                                        ["memory",dataReceive[j]["memory"][i],"memory"], ["network",dataReceive[j]["network"][i],"network"]];
+                        grids.push({});
+                        xAxes.push({
+                                        show: false,
+                                        type:'category',
+                                        gridIndex: j,
+                                        data:["cpu","io","memory","network"],
+                                    });
+                        yAxes.push({
+                                        gridIndex: j,
+                                        type: 'value',
+                                        min:0,
+                                        max:100,
+                                    });
+                        series.push({
+                                        type: 'bar',
+                                        xAxisIndex: j,
+                                        yAxisIndex: j,
+                                        data: data[j],
+                                        showSymbol: false,
+                                    });
+                        if(data[j][1][3]!=1){
+                                        titles.push({
+                                            text: data[j][0][3],
+                                            textStyle: {
+                                                fontSize: 12,
+                                                fontWeight: 'bold',
+                                                color:'#ff0000',
+                                            }
+                                        });
+                                    }else{
+                            titles.push({
+                                            text: data[j][0][3],
+                                            textStyle: {
+                                                fontSize: 12,
+                                                fontWeight: 'bold',
+                                            }
+                                        });
+                        }
+                        seriesIndexs.push(j);
+                    }
+                    i++;
+                    rowNumber = Math.ceil(Math.sqrt(j))+1;
+                    echarts.util.each(grids, function (grid, idx) {
+                                    grid.left = ((idx % rowNumber) / rowNumber * 100 + 3) + '%';
+                                    grid.top = (Math.floor(idx / rowNumber) / rowNumber * 100 +8) + '%';
+                                    grid.width = (1 / rowNumber * 100-4) + '%';
+                                    grid.height = (1 / rowNumber * 100-3) + '%';
+                                    titles[idx].left = (parseFloat(grid.left) + parseFloat(grid.width) / 2-2) + '%';
+                                    titles[idx].top = (parseFloat(grid.top) +parseFloat(grid.height))+ '%';
+                                });
+                    option = {
+                        title: titles,
+                        grid: grids,
+                        xAxis: xAxes,
+                        yAxis: yAxes,
+                        series: series,
+                        visualMap: [{
+                            type: 'piecewise',
+                            orient: 'horizontal',
+                            dimension:2,
+                            top: 0,
+                            left: 'center',
+                            categories: ["cpu","io","memory","network"],
+                            inRange: {color:['#c23531','#334b5c', '#61a0a8', '#d48265']},
+                            outOfRange: {color: '#ddd'},
+                            seriesIndex: seriesIndexs
+                        }],
+                        tooltip: {
+                            formatter: function (obj) {
+                                var value = obj.value;
+                                return  value[2] + '：'+ value[1];
+                            }
+                        },
+                        title: titles,
+                    };
+                    myChart.hideLoading();
+                    myChart.setOption(option);
+                },1000);
+            </script>
+        </div>
+      
+    </div>      
+</div>
+
+{% endblock %}
+{% block javascript %}
+    <script type="text/javascript" src="{% static "js/lib/jquery.js"%}" ></script>
+{% endblock %}

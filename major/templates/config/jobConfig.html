@@ -1,0 +1,229 @@
+{% extends "base/page-base.html" %}
+{% block title %}作业流配置{% endblock %}
+{% load staticfiles %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static "css/compiled/jobConfig.css" %}"rel="stylesheet" type="text/css" /> 
+{% endblock %}
+
+{% block side-nav %}
+{% include "side-nav/side-nav-config.html" %}
+{% endblock %}
+
+{% block content %}
+<!-- main container -->
+<div class="content container">
+    <div class="row">
+        <ol class="breadcrumb">
+            <span>当前所在位置：</span>
+            <li>
+                <a href="">配置管理</a>
+            </li>
+            <li ><a href="/appConfig">作业流配置</a></li>
+            <li class="active">{{jobstream.name}}</li>
+        </ol>
+    </div>
+    <div class="row"> 
+        <div class="col-md-12">
+
+            <div class="main-box">
+            <!-- Default panel contents -->
+            <div class="main-box-header clearfix">
+                <div style="float:left;">
+                    <h2 class="pull-left">{{jobstream.name}} </h2>
+                </div>
+                <div style="float:right; margin-right:20px;" id="{{jobstream.id}}">
+                    <a class="btn btn-primary pull-right" data-toggle="modal" data-target='#newJobModal' id="add-job"> <i class="fa fa-plus fa-fw"></i>新增产品</a>
+                </div>
+                <div style="clear:both;"></div>
+            </div>
+
+            <div class="main-box-body">
+                
+                <div class="row">
+                    <div class="table-responsive">
+                    
+                    <div>
+                        <table class="table table-striped table-hover table-bordered " id="rawjob">
+                            <thead>
+                                <tr>
+                                    <td>序号</td>
+                                    <td>产品名称</td>
+                                    <td>运行模式</td>
+                                    <td>产品序号</td>
+                                    <td>操作</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {%for job in jobstream.jobs.all%}
+                                <tr id='{{job.id}}'>
+                                    <th>{{forloop.counter}}</th>
+                                    <td>{{job.name}}</td>
+                                    <td>
+                                    {%for mode in job.runmode.all%}
+                                        <p id="{{mode.id}}">{{mode.name}}<a data-toggle='modal' class='btn btn-editMode'><i class='fa fa-pencil-square-o'></i></a>
+                                        </p>   
+                                    {%endfor%}
+                                    <a data-toggle='modal' class='btn btn-addMode'><i class='fa fa-plus-square-o'></i></a>
+                                    </td>
+                                    <td>{{job.number}}</td>
+                                    <td><a data-toggle='modal' class='btn btn-editJob'><i class='fa fa-pencil-square-o'></i></a></td>
+                                </tr>
+                                {%endfor%}
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        
+
+              <!--（Modal） -->
+            <div class="modal fade" id="editJobModal" tabindex="-1" role="dialog"
+                aria-labelledby="editJobModal" aria-hidden="true">
+                <div class="modal-dialog editJobModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            &times;
+                            </button>
+                            <h4 class="modal-title" id="">编辑产品</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form id="form-edit-job" class="row">
+                                <input type="text" name='job-id' class='job-id' value='' style="display:none" />
+                                <div class="form-group col-md-12">
+                                    <label for="">产品名称</label>
+                                    <input type="text"  name="job-name" class="form-control job-name" id="" placeholder="">
+                                </div>
+                                <div class="form-group col-md-12">
+                                    <label for="">产品序号</label>
+                                    <input type="text"  name='job-number' class="form-control job-number" id="" placeholder="">
+                                </div>
+                         
+                                <div class="form-group col-md-6">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default"
+                            data-dismiss="modal">取消
+                            </button>
+                            <button type="button" class="btn btn-primary">
+                            保存
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.modal-content -->
+            </div>
+
+            <div class="modal fade" id="editModeModal" tabindex="-1" role="dialog"
+                aria-labelledby="editModeModal" aria-hidden="true">
+                <div class="modal-dialog editModeModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            &times;
+                            </button>
+                            <h4 class="modal-title" id="">编辑运行模式</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form id="form-edit-mode" class="row">
+                                <input type="text" name='mode-id' class='mode-id' value='' style="display:none" />
+                                <div class="form-group col-md-12" id="runmode">  
+                                    <label for="">运行模式名称</label>
+                                    <input type="text" name="mode-name" class="form-control mode-name" id="" placeholder="">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default"
+                            data-dismiss="modal">取消
+                            </button>
+                            <button type="button" class="btn btn-primary">
+                            保存
+                            </button>
+                        </div>
+                    </div>
+                </div>
+               
+            </div>
+            
+            <div class="modal fade" id="addModeModal" tabindex="-1" role="dialog"
+                aria-labelledby="addModeModal" aria-hidden="true">
+                <div class="modal-dialog addModeModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            &times;
+                            </button>
+                            <h4 class="modal-title" id="">添加运行模式</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form id="form-add-mode" class="row">
+                                <input type="text" name='job-id' class='job-id' value='' style="display:none;" />
+                                <div class="form-group col-md-12" id="runmode">  
+                                    <label for="">运行模式名称</label>
+                                    <input type="text" name="mode-name" class="form-control mode-name" id="" placeholder="">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default"
+                            data-dismiss="modal">取消
+                            </button>
+                            <button type="button" class="btn btn-primary">
+                            保存
+                            </button>
+                        </div>
+                    </div>
+                </div>
+               
+            </div>
+
+            <div class="modal fade" id="addJobModal" tabindex="-1" role="dialog" aria-labelledby="addJobModal" aria-hidden="true">
+                <div class="modal-dialog addJobModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="newJobLabel">添加产品</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="row" id="form-add-job">
+                                <input type="text" name="jobstream-id" class="jobstream-id" value="" style="display: none;"/>
+                                <div class="form-group col-md-6">
+                                    <label for="">产品名称</label>
+                                    <input type="text" class="form-control job-name" name="name" id="" placeholder="">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="">节点序号</label>
+                                    <input type="text" class="form-control job-num" name="job-num" id="" placeholder="">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-primary">保存</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.modal-content -->
+            </div>
+            <!-- /.modal -->
+
+
+        </div>
+    </div>
+      
+    </div>      
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static "js/page/jobConfig.js"%}"></script>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}

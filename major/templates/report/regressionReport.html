@@ -1,0 +1,665 @@
+{% extends "base/page-base.html" %}
+{% block title %}优化建议报告{% endblock %}
+
+{% block css %}
+{% load staticfiles %}
+<link href="{% static "css/style.css" %}" rel="stylesheet">
+<link href="{% static "css/report.css" %}" rel="stylesheet">
+<script src="{% static "js/echarts.min.js"%}"></script>
+{% endblock %}
+
+{% block side-nav %}
+{% include "side-nav/side-nav-index.html" %}
+{% endblock %}
+
+
+{% block content %}
+<div class="content container">
+	<div class="row">
+		<ol class="breadcrumb">
+			<span>当前所在位置：</span>
+			<li>
+				<a href="/task/{{taskid}}">任务</a>
+			</li>
+			<li class="active">回归测试任务报告</li>
+
+			<div class="btn-group btn-group-md" id="toolbar">
+				<a id='export' class="btn btn-default">
+					<i class="fa fa-share-square-o fa-fw"></i>导出
+				</a>
+				<a class="btn btn-default">
+					<i class="fa fa-refresh fa-fw"></i>重新生成
+				</a>
+			</div>
+		</ol>
+	</div>
+
+	<div class="row">
+		<div class="row">
+			<div class="main-box clearfix report">
+
+				<div id="navbar-example" class="main-box-body col-lg-2">
+					<ul class="nav nav-list">
+						<li class="active" >
+							<a href="#taskInfo" >
+                                <i class="icon-chevron-right"></i>
+                                任务基本信息
+							</a>
+						</li>
+                        <li>
+							<a href="#taskResult">
+								<i class="icon-chevron-right"></i>
+								任务测试结果
+							</a>
+						</li>
+						<li>
+							<a href="#productResult">
+								<i class="icon-chevron-right"></i>
+								产品测试结果
+							</a>
+						</li>
+						<li>
+							<a href="#suggest">
+								<i class="icon-chevron-right"></i>
+								任务优化建议
+							</a>
+						</li>
+					</ul>
+				</div>
+
+				<div class="col-lg-10" id="report-div"><!--style="height:1200px; overflow-y:auto"-->
+                    <header class="main-box-header">
+					    <h1 class="text-center name"><strong>{{ task.name }}评估分析与优化建议报告</strong></h1>
+				    </header>
+					<div class="list-group" id="reports" style="clear:both">
+						<div class="list-group-item clearfix" id="taskInfo">
+							<h2><strong>任务概述</strong></h2>
+                            <div class="rwgs" style="padding-top: 20px;">
+
+                                <div class="col-lg-12 table-responsive">
+                                    <p><strong>任务信息</strong></p>
+                                    <table class="table table-striped table-hover table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <td>任务名称</td>
+                                                <p id="taskid" type="hidden" value="{{ task.id }}"></p>
+                                                <td>任务描述</td>
+                                                <td>任务类型</td>
+                                                <td>作业流</td>
+                                                <td>创建者</td>
+                                                <td>任务状态</td>
+                                                <td>开始时间</td>
+                                                <td>结束时间</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>{{task.name}}</td>
+                                                <td>{{task.introduction}}</td>
+                                                <td>{{task.type}}</td>
+                                                <td>{{task.regression_jobstream.name}}</td>
+                                                <td>{{task.user}}</td>
+                                                <td id="task_status">{{task.process}}</td>
+                                                <td id="start_time">{{ task.start_date }} {{task.start_time}}</td>
+                                                <td>{{task.end_date}} {{task.end_time}}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="list-group-item clearfix" id="taskResult">
+                            <h2><strong>资源消耗对比</strong></h2>
+                            <div class="jzdb" style="padding-top: 20px;">
+                                <div id="CPUChart" class="mychart" style="width: 50%;height: 300%;"></div>
+                                <div class="div" style="display:none"><image class="image CPUChart"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('CPUChart'));
+                                    var phases=[];
+                                    var jobs=[];
+                                    {%for name in jobName%} jobs.push('{{name}}');{%endfor%}         //所有阶段
+                                    {%for name in phaseNames%}  phases.push('{{name}}');{%endfor%}    //并行产品
+                                    var option = {
+                                        title: {
+                                            text: '             CPU占用率',
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'category',
+                                            data: [{%for name in jobName%}'{{name}}',{%endfor%}],
+                                        },
+                                        yAxis: {
+                                            type: 'value',
+
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        animation : false,
+                                        legend:{
+                                            data:['峰值', '平均值','资源基准消耗','资源集中度','资源累计消耗'],
+                                            padding:[35,0],
+                                            itemHeight:5,
+                                        },
+                                        series: [
+                                            {
+                                                name:'峰值',
+                                                type:'line',
+                                                data:[{%for value in cpuIdle.max_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '平均值',
+                                                type: 'line',
+                                                data: [{%for value in cpuIdle.average_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name:'资源基准消耗',
+                                                type:'line',
+                                                data:[{%for value in cpuIdle.sorted_consume_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '资源集中度',
+                                                type: 'line',
+                                                data: [{%for value in cpuIdle.time_density_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '资源累计消耗',
+                                                type: 'line',
+                                                data: [{%for value in cpuIdle.total_consume_score%}'{{value}}',{%endfor%}],
+                                            }],
+                                        tooltip: {
+                                            trigger:'axis',
+                                            formatter: function (obj) {
+                                                var index=jobs.indexOf(obj[0].name);
+                                                return  obj[0].name+ '<br>'+obj[0].seriesName+' : '+obj[0].value+'<br>'
+                                                        +obj[1].seriesName+' : '+obj[1].value+'<br>'
+                                                        +obj[2].seriesName+' : '+obj[2].value+'<br>'
+                                                        +obj[3].seriesName+' : '+obj[3].value+'<br>'
+                                                        +obj[4].seriesName+' : '+obj[4].value+'<br>'
+                                                        +'并行产品 : '+phases[index];
+                                            }
+                                        },
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.CPUChart").attr("src",dataurl);
+                                </script>
+                                <div id="NCChart" class="mychart" style="width: 50%;height: 300%; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image NCChart"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('NCChart'));
+                                    var option = {
+                                        title: {
+                                            text: '              CPU浮点计算'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'category',
+                                            data: [{%for name in jobName%}'{{name}}',{%endfor%}],
+                                        },
+                                        yAxis: {
+                                            type: 'value',
+
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        legend:{
+                                            data:['峰值', '平均值','资源基准消耗','资源集中度','资源累计消耗'],
+                                            padding:[35,0],
+                                            itemHeight:5,
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        animation : false,
+                                        series: [
+                                            {
+                                                name:'峰值',
+                                                type:'line',
+                                                data:[{%for value in cpuFlops.max_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '平均值',
+                                                type: 'line',
+                                                data: [{%for value in cpuFlops.average_score%}'{{value}}',{%endfor%}],
+                                            },{
+                                                name:'资源基准消耗',
+                                                type:'line',
+                                                data:[{%for value in cpuFlops.sorted_consume_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '资源集中度',
+                                                type: 'line',
+                                                data: [{%for value in cpuFlops.time_density_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '资源累计消耗',
+                                                type: 'line',
+                                                data: [{%for value in cpuFlops.total_consume_score%}'{{value}}',{%endfor%}],
+                                            }],
+                                        tooltip: {
+                                            trigger:'axis',
+                                            formatter: function (obj) {
+                                                var index=jobs.indexOf(obj[0].name);
+                                                return  obj[0].name+ '<br>'+obj[0].seriesName+' : '+obj[0].value+'<br>'
+                                                        +obj[1].seriesName+' : '+obj[1].value+'<br>'
+                                                        +obj[2].seriesName+' : '+obj[2].value+'<br>'
+                                                        +obj[3].seriesName+' : '+obj[3].value+'<br>'
+                                                        +obj[4].seriesName+' : '+obj[4].value+'<br>'
+                                                        +'并行产品 : '+phases[index];
+                                            }
+                                        },
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.NCChart").attr("src",dataurl);
+                                </script>
+                                <div id="IOChart" class="mychart" style="width: 50%;height: 300%; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image IOChart"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('IOChart'));
+                                    var option = {
+                                        title: {
+                                            text: '              内存占用率'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'category',
+                                            data: [{%for name in jobName%}'{{name}}',{%endfor%}],
+                                        },
+                                        legend:{
+                                            data:['峰值', '平均值','资源基准消耗','资源集中度','资源累计消耗'],
+                                            padding:[35,0],
+                                            itemHeight:5,
+                                        },
+                                        yAxis: {
+                                            type: 'value',
+
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        animation : false,
+                                        series: [
+                                            {
+                                                name:'峰值',
+                                                type:'line',
+                                                data:[{%for value in memRatio.max_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '平均值',
+                                                type: 'line',
+                                                data: [{%for value in memRatio.average_score%}'{{value}}',{%endfor%}],
+                                            },{
+                                                name:'资源基准消耗',
+                                                type:'line',
+                                                data:[{%for value in memRatio.sorted_consume_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '资源集中度',
+                                                type: 'line',
+                                                data: [{%for value in memRatio.time_density_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '资源累计消耗',
+                                                type: 'line',
+                                                data: [{%for value in memRatio.total_consume_score%}'{{value}}',{%endfor%}],
+                                            }],
+                                        tooltip: {
+                                            trigger:'axis',
+                                            formatter: function (obj) {
+                                                var index=jobs.indexOf(obj[0].name);
+                                                return  obj[0].name+ '<br>'+obj[0].seriesName+' : '+obj[0].value+'<br>'
+                                                        +obj[1].seriesName+' : '+obj[1].value+'<br>'
+                                                        +obj[2].seriesName+' : '+obj[2].value+'<br>'
+                                                        +obj[3].seriesName+' : '+obj[3].value+'<br>'
+                                                        +obj[4].seriesName+' : '+obj[4].value+'<br>'
+                                                        +'并行产品 : '+phases[index];
+                                            }
+                                        },
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.IOChart").attr("src",dataurl);
+                                </script>
+                                <div id="NFSChart" class="mychart" style="width: 50%;height: 300%; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image NFSChart"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('NFSChart'));
+                                    var option = {
+                                        title: {
+                                            text: '              swap空间占用率'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'category',
+                                            data: [{%for name in jobName%}'{{name}}',{%endfor%}],
+                                        },
+                                        yAxis: {
+                                            type: 'value',
+
+                                        },
+                                        legend:{
+                                            data:['峰值', '平均值','资源基准消耗','资源集中度','资源累计消耗'],
+                                            padding:[35,0],
+                                            itemHeight:5,
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        animation : false,
+                                        series: [
+                                            {
+                                                name:'峰值',
+                                                type:'line',
+                                                data:[{%for value in swapRatio.max_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '平均值',
+                                                type: 'line',
+                                                data: [{%for value in swapRatio.average_score%}'{{value}}',{%endfor%}],
+                                            },{
+                                                name:'资源基准消耗',
+                                                type:'line',
+                                                data:[{%for value in swapRatio.sorted_consume_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '资源集中度',
+                                                type: 'line',
+                                                data: [{%for value in swapRatio.time_density_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '资源累计消耗',
+                                                type: 'line',
+                                                data: [{%for value in swapRatio.total_consume_score%}'{{value}}',{%endfor%}],
+                                            }],
+                                        tooltip: {
+                                            trigger:'axis',
+                                            formatter: function (obj) {
+                                                var index=jobs.indexOf(obj[0].name);
+                                                return  obj[0].name+ '<br>'+obj[0].seriesName+' : '+obj[0].value+'<br>'
+                                                        +obj[1].seriesName+' : '+obj[1].value+'<br>'
+                                                        +obj[2].seriesName+' : '+obj[2].value+'<br>'
+                                                        +obj[3].seriesName+' : '+obj[3].value+'<br>'
+                                                        +obj[4].seriesName+' : '+obj[4].value+'<br>'
+                                                        +'并行产品 : '+phases[index];
+                                            }
+                                        },
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.NFSChart").attr("src",dataurl);
+                                </script>
+                                <div id="NETChart" class="mychart" style="width: 50%;height: 300%; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image NETChart"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('NETChart'));
+                                    var option = {
+                                        title: {
+                                            text: '              IO读写速率'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'category',
+                                            data: [{%for name in jobName%}'{{name}}',{%endfor%}],
+                                        },
+                                        yAxis: {
+                                            type: 'value',
+                                        },
+                                        legend:{
+                                            data:['峰值', '平均值','资源基准消耗','资源集中度','资源累计消耗'],
+                                            padding:[35,0],
+                                            itemHeight:5,
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        animation : false,
+                                        series: [
+                                            {
+                                                name:'峰值',
+                                                type:'line',
+                                                data:[{%for value in ioRatio.max_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '平均值',
+                                                type: 'line',
+                                                data: [{%for value in ioRatio.average_score%}'{{value}}',{%endfor%}],
+                                            },{
+                                                name:'资源基准消耗',
+                                                type:'line',
+                                                data:[{%for value in ioRatio.sorted_consume_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '资源集中度',
+                                                type: 'line',
+                                                data: [{%for value in ioRatio.time_density_score%}'{{value}}',{%endfor%}],
+                                            },
+                                            {
+                                                name: '资源累计消耗',
+                                                type: 'line',
+                                                data: [{%for value in ioRatio.total_consume_score%}'{{value}}',{%endfor%}],
+                                            }],
+                                        tooltip: {
+                                            trigger:'axis',
+                                            formatter: function (obj) {
+                                                var index=jobs.indexOf(obj[0].name);
+                                                return  obj[0].name+ '<br>'+obj[0].seriesName+' : '+obj[0].value+'<br>'
+                                                        +obj[1].seriesName+' : '+obj[1].value+'<br>'
+                                                        +obj[2].seriesName+' : '+obj[2].value+'<br>'
+                                                        +obj[3].seriesName+' : '+obj[3].value+'<br>'
+                                                        +obj[4].seriesName+' : '+obj[4].value+'<br>'
+                                                        +'并行产品 : '+phases[index];
+                                            }
+                                        },
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.NETChart").attr("src",dataurl);
+                                </script>
+                            </div>
+
+                            <h2><strong>系统应用分类分析</strong></h2>
+                            <div class="flfx" style="overflow:auto;">
+                                <div id="xtfl" style="padding-top: 15px;" class="col-lg-12">
+                                    <div style="padding-top: 10px;">
+                                    <table class="table table-striped table-bordered" >
+                                        <thead>
+                                            <tr>
+                                                <td><strong>资源类型</strong></td>
+                                                <td><strong>阶段数</strong></td>
+                                                <td><strong>所占百分比</strong></td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>无密集型</td>
+                                                <td>{{ task.regression_reportType.nullType }}</td>
+                                                <td>{{ percentage_type.null }}%</td>
+                                            </tr>
+                                            <tr>
+                                                <td>CPU密集型</td>
+                                                <td>{{ task.regression_reportType.cpuType }}</td>
+                                                <td>{{ percentage_type.cpu}}%</td>
+                                            </tr>
+                                            <tr>
+                                                <td>网络密集型</td>
+                                                <td>{{ task.regression_reportType.networkType }}</td>
+                                                <td>{{ percentage_type.network}}%</td>
+                                            </tr>
+                                            <tr>
+                                                <td>内存密集型</td>
+                                                <td>{{ task.regression_reportType.diskType }}</td>
+                                                <td>{{ percentage_type.disk}}%</td>
+                                            </tr>
+                                            <tr>
+                                                <td>存储密集型</td>
+                                                <td>{{ task.regression_reportType.memoryType }}</td>
+                                                <td>{{ percentage_type.memory}}%</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div id="taskMajorType" style="width: 100%;height: 500px;"></div>
+                                    <div class="div" style="display:none"><image class="image taskMajorType"/></div>
+                                    </div>
+                                    <script>
+                                        var myChart = echarts.init(document.getElementById('taskMajorType'));
+                                        var option = {
+                                            title : {
+                                                text: '任务阶段类型统计',
+                                            },
+                                            tooltip : {
+                                                trigger: 'item',
+                                            },
+                                            animation : false,
+                                            formatter: "{a} <br/>{b} : {c} ({d}%)",
+                                            series : [
+                                                {
+                                                    name: '分类类型',
+                                                    type: 'pie',
+                                                    radius : ' 50%',
+                                                    center: ['50%', '65%'],
+                                                    data:[
+                                                        {value:{{ task.regression_reportType.diskType }}, name:'内存密集型'},
+                                                        {value:{{ task.regression_reportType.cpuType }}, name:'CPU密集型'},
+                                                        {value:{{ task.regression_reportType.nullType }}, name:'无密集型'},
+                                                        {value:{{ task.regression_reportType.networkType }}, name:'网络密集型'},
+                                                        {value:{{ task.regression_reportType.memoryType }}, name:'存储密集型'}
+                                                    ],
+                                                    itemStyle: {
+                                                        emphasis: {
+                                                            shadowBlur: 10,
+                                                            shadowOffsetX: 0,
+                                                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        };
+                                        myChart.setOption(option);
+                                        var dataurl= myChart.getDataURL();
+                                        $(".image.taskMajorType").attr("src",dataurl);
+                                    </script>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div id="abnormal" class="list-group-item clearfix">
+                        <h4><strong>异常与瓶颈摘要</strong></h4>
+                        <div class="col-md-12" >
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                <tr>
+                                    <th>异常检查点名称</th>
+                                    <th>检查点类型</th>
+                                    <th>异常检查点描述</th>
+                                    <th>异常并行作业个数</th>
+                                </tr>
+                                </thead>
+                                <tbody >
+                                {%for abnormal in task.regression_abnormalType.all%}
+                                <tr>
+                                    <td>{{ abnormal.abnormal_type.name }}</td>
+                                    <td>{{ abnormal.abnormal_type.type }}</td>
+                                    <td>{{ abnormal.abnormal_type.description }}</td>
+                                    <td>{{ abnormal.abnormal_num }}</td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4><strong>异常与瓶颈</strong></h4>
+                        <div class="col-md-12">
+                              <div id="taskAbnormal" style="width: 100%;height: 500px;"></div>
+                                    <div class="div" style="display:none"><image class="image taskAbnormal"/></div>
+                                    </div>
+                                    <script>
+                                        var myChart = echarts.init(document.getElementById('taskAbnormal'));
+                                        var option = {
+                                            title : {
+                                                text: '任务异常类型统计',
+                                            },
+                                            tooltip : {
+                                                trigger: 'item',
+                                            },
+                                            animation : false,
+                                            formatter: "{a} <br/>{b} : {c} ({d}%)",
+                                            series : [
+                                                {
+                                                    name: '分类类型',
+                                                    type: 'pie',
+                                                    radius : ' 50%',
+                                                    center: ['50%', '65%'],
+                                                    data:[  {%for abnormal in task.regression_abnormalType.all%}
+                                                            {value:{{abnormal.abnormal_num }}, name:'{{ abnormal.abnormal_type.name }}'},
+                                                            {% endfor %}
+                                                    ],
+                                                    itemStyle: {
+                                                        emphasis: {
+                                                            shadowBlur: 10,
+                                                            shadowOffsetX: 0,
+                                                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        };
+                                        myChart.setOption(option);
+                                        var dataurl= myChart.getDataURL();
+                                        $(".image.taskAbnormal").attr("src",dataurl);
+                                    </script>
+                                </div>
+                        <div class="list-group-item clearfix" id="suggest">
+							<h2><strong>优化建议</strong></h2>
+                            <div style="padding-top: 20px;">
+							<div class="advice">
+								<span><strong>软件优化建议 </strong></span>
+                                {%for suggestion in programSugession%}
+							<!--	<span><strong>建议该单作业部署在设置3上发挥其最佳性能</strong></span> -->
+								<p>{{ suggestion.description }}</p>
+                                {%endfor%}
+							</div>
+							<div class="advice">
+								<span><strong>硬件优化建议 </strong></span>
+							<!--	<span><strong>建议该单作业部署在分析节点上发挥其最佳性能</strong></span> -->
+                                {%for suggestion in hardwareSugession%}
+								<p>{{ suggestion.description }}</p>
+                                {%endfor%}
+							</div>
+                            </div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<footer id="footer-bar" class="row" style="opacity: 1;">
+    <p id="footer-copyright" class="col-xs-12">
+    © 2016
+    <a id="aaa" target="_blank">copyright</a> . Powered by BUPT.
+    </p>
+</footer>
+
+{% endblock %}
+
+{% block javascript %}
+
+<script src="{% static "js/report.js" %}"></script>
+<script type="text/javascript" src="{% static "js/lib/jquery.js"%}" ></script>
+<script src="{% static "js/FileSaver.js" %}"></script>
+    <script src="{% static "js/jquery.wordexport.js" %}"></script>
+{% endblock %}
+

@@ -1,0 +1,364 @@
+{% extends "base/page-base.html" %}
+{% block title %}异常编辑{% endblock %}
+
+{% load staticfiles %}
+{% block css %}
+<link rel="stylesheet" href="{% static "css/compiled/buttons.css" %}" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="{% static "css/compiled/ioedit.css" %}" rel="stylesheet" type="text/css" />
+{% endblock%}
+
+{% block side-nav %}
+{% include "side-nav/side-nav-index.html" %}
+{% endblock %}
+
+
+{% block content %}
+
+<!-- main container -->
+<div class="content container">
+    <div class="row">
+        <ol class="breadcrumb">
+            <span>当前所在位置：</span>
+            <li>
+                <a href="/index">主页</a>
+            </li>
+            <li>
+                <a href="/task/1/unuslReport">任务报告</a>
+            </li>
+            <li class="active">编辑</li>
+        </ol>
+        <!-- breadcrumb end-->
+    </div>
+    <div class="row">
+        <div class="main-box clearfix report">
+            <div class="main-box-header">
+                <h1 class="text-left">IO升高--编辑</h1>
+            </div>
+
+            <div class="main-box-body clearfix">
+                <div class="col-md-9">
+                    <div id="charts">
+                        <div class="achart well ">
+                            <div id="tools">
+                                <div class="col-md-4">
+                                    <div class="btn-group" role="group" aria-label="tools">
+
+                                        <button type='button' class='button button-action button-circle button-tiny' name="addChart"
+                                                data-toggle="modal"
+                                                data-target="#selectModal">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button type='button' class='button button-caution button-circle button-tiny' name="delChart">
+                                            <span class="fa fa-close"></span>
+                                        </button>
+                                        <button type='button' class='button button-highlight button-circle button-tiny' name="argSelect"
+                                                data-toggle="modal"
+                                                data-target="#argModal">
+                                            <span class="fa fa-cog"></span>
+                                        </button>
+                                        <button type='button' class='button button-primary button-box button-tiny' name="rowUp">
+
+                                            <span class="fa fa-search-plus"></span>
+                                        </button>
+                                        <button type='button' class='button  button-primary button-box button-tiny' name="rowDown">
+
+                                            <span class="fa fa-search-minus"></span>
+                                        </button>
+
+
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+
+                                    <select id="selector" class="form-control" name="list">
+                                        <option value="1">节点一</option>
+                                        <option value="2">节点二</option>
+                                        <option value="3">节点三</option>
+                                    </select>
+
+                                </div>
+
+                                <div class="btn-group col-md-offset-1" role="group" aria-label="tools">
+
+
+                                    <button type='button' class="btn btn-default hide" name="argSelect" data-toggle="modal"
+                                            data-target="#switchModal">
+                                        参数选择
+                                    </button>
+                                    <button type='button' class="btn btn-default" name="tagMax">标记最大</button>
+                                    <button type='button' class="btn btn-default" name="tagMin">标记最小</button>
+                                    <button type='button' class="btn btn-default hide" name="rowUp">放大</button>
+                                    <button type='button' class="btn btn-default hide" name="rowDown">缩小</button>
+
+                                </div>
+                            </div>
+                            <div id="cpu_io_anaylse" class="col-md-12 pull-center" name="chart"
+                                 style="height:400px"></div>
+
+                        </div>
+                    </div>
+                    <!-- 一堆图 -->
+
+                    <!-- 异常描述 -->
+                </div>
+                <!-- end col-md-9 -->
+
+
+                <!-- 保存和取消 -->
+
+                <div data-spy="affix" data-offset-top="" class="col-md-2 col-md-offset-8">
+
+                    <div class="io-err panel panel-info">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">异常编辑</h3>
+                        </div>
+                        <form class="form panel-body" id="io-err-form">
+                            <label>
+                                <span id="errname">异常名称</span><br/>
+                                <input type="text" class="form-control" name="errname" role="errname">
+                            </label>
+                            <label>
+                                <span id="starttime">开始时间</span>
+                                <input type="text" class="form-control" name="starttime">
+                            </label>
+                            <label>
+                                <span id="endtime">结束时间</span>
+                                <input type="text" class="form-control" name="endtime" role="errname">
+                            </label>
+                            <label>
+                                <span id="errdesc">异常描述</span>
+                                    <textarea class="form-control" rows="4" name="errdesc" role="errname"
+                                              style="resize:none"></textarea>
+                            </label>
+                        </form>
+                        <div class="panel-footer">
+                         <a class="btn btn-default btn-sm" href="report.html">取消</a>
+                            <a class="btn btn-primary btn-sm" data-toggle="modal" data-target="#confirmModal">保存</a>
+                           
+                        </div>
+                    </div>
+                </div>
+                <!-- tool box -->
+
+            </div>
+        </div>
+
+        <!-- mainbox end-->
+    </div>
+    <div class="row">
+        <footer id="footer-bar" class="row" style="opacity: 1;">
+            <p id="footer-copyright" class="col-xs-12">
+                © 2015
+                <a href="" target="_blank">copyright</a> . Powered by BUPT.
+            </p>
+        </footer>
+    </div>
+    <!-- page-content -->
+</div>
+
+<!--confirm modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="comfirmModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h4>确定保存更改？</h4>
+            </div>
+            <div class="modal-footer pull-center">
+               
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    取消
+                </button>
+                 <button type="button" class="btn btn-primary" type="submit"
+                        name="confirm"
+                        id="confirm">确定
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--select modal-->
+<div class="modal fade" id="selectModal" tabindex="-1" role="dialog" aria-labelledby="comfirmModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h3 class="text-left">选择新增的节点</h3>
+                <select id="modalSelector" class="form-control" name="list">
+                    <option value="1">节点一</option>
+                    <option value="2">节点二</option>
+                    <option value="3">节点三</option>
+                </select>
+            </div>
+            <div class="modal-footer pull-center">
+               
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    取消
+                </button>
+                 <button type="button" class="btn btn-primary" type="submit"
+                        name="confirm"
+                        id="addChartConfirm">确定
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--argSelect-->
+<div class="modal fade" id="argModal" tabindex="-1" role="dialog" aria-labelledby="comfirmModalLabel" style="width: 60%; margin:auto">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h3 class="text-left">选择图表的参数</h3>
+                <div class="taskParam clearfix">
+                                <div class="col-md-6 param-level " >
+                                    <div class="list-group" style="margin: 0">
+                                        <a class="list-group-item " id="CPU-param">
+                                            CPU
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item " id="Memory-param">
+                                            Memory
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item" id="Network-param">
+                                            Network
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item " id="IO-param">
+                                            I/O
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 param-sublevel" style="display:none" id="CPU-params">
+                                    <div class="list-group">
+                                        <a class="list-group-item CPUparam">
+                                            系统CPU利用率(Sys%)
+                                        </a>
+                                        <a class="list-group-item CPUparam">
+                                            用户CPU利用率(User%)
+                                        </a>
+                                        <a class="list-group-item CPUparam">
+                                            CPU等待率(Wait%)
+                                        </a>
+                                        <a class="list-group-item CPUparam">
+                                            CPU空闲率(Idle%)
+                                        </a>
+                                        <a class="list-group-item CPUparam">
+                                            浮点计算性能(Float-point Gflops)
+                                        </a>
+                                        <a class="list-group-item CPUparam">
+                                            向量化比例(Quantitative %)
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="Memory-params">
+                                    <div class="list-group">
+                                        <a class="list-group-item Memoryparam">
+                                            内存使用率(Memory%)
+                                        </a>
+                                        <a class="list-group-item Memoryparam">
+                                            Swap使用率(Swap%)
+                                        </a>
+                                        <a class="list-group-item Memoryparam">
+                                            内存带宽读速率(MemoryRead GB/s)
+                                        </a>
+                                        <a class="list-group-item Memoryparam">
+                                            内存带宽写速率(MemoryWrite GB/s)
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="Network-params">
+                                    <div class="list-group">
+                                        <a class="list-group-item Networkparam">
+                                            网络发送速度(NetSend MB/s)
+                                        </a>
+                                        <a class="list-group-item Networkparam ">
+                                            网络接受速度(NetRec MB/s)
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="IO-params">
+                                    <div class="list-group">
+                                        <a class="list-group-item IOparam">
+                                            磁盘读速率(DiskRead KB/s)
+                                        </a>
+                                        <a class="list-group-item IOparam">
+                                            磁盘读速率(DiskWrite KB/s)
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+            </div>
+            <div class="modal-footer pull-center">
+               
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    取消
+                </button>
+                 <button type="button" class="btn btn-primary" name="confirm" data-dismiss="modal">
+                    确定
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!--switch modal-->
+<div class="modal fade" id="switchModal" tabindex="-1" role="dialog" aria-labelledby="switchModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="control-group clearfix">
+                        <label class="control-label" for="notification1">CPU</label>
+
+                        <div class="controls">
+                            <div class="switch pull-right" id="switch-cpu">
+                                <input type="checkbox" checked/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group clearfix">
+                        <label class="control-label" for="notification2">IO</label>
+
+                        <div class="controls">
+                            <div class="switch pull-right" id="switch-io">
+                                <input type="checkbox" checked/>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer pull-center">
+              
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    取消
+                </button>
+                  <button type="button" class="btn btn-primary" type="submit"
+                        name="confirm"
+                        id="switchconfirm">确定
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+<!-- scripts -->
+{% endblock %}
+{% block javascript %}
+<script src="{% static "js/echarts.js"%}"></script>
+<script src="{% static "js/cpu_io_anaylse.js" %}"></script>
+<script src="{% static "js/bootstrap-switch.min.js"%}"></script>
+
+{% endblock %}

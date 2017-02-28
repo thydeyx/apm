@@ -1,0 +1,805 @@
+{% extends "base/page-base.html" %}
+{% block title %}优化建议报告{% endblock %}
+
+{% block css %}
+{% load staticfiles %}
+<link href="{% static "css/style.css" %}" rel="stylesheet">
+<link href="{% static "css/report.css" %}" rel="stylesheet">
+<script src="{% static "js/echarts.min.js"%}"></script>
+{% endblock %}
+
+{% block side-nav %}
+{% include "side-nav/side-nav-index.html" %}
+{% endblock %}
+
+
+{% block content %}
+<div class="content container">
+	<div class="row">
+		<ol class="breadcrumb">
+			<span>当前所在位置：</span>
+			<li>
+				<a href="/task/{{taskid}}">任务</a>
+			</li>
+			<li class="active">任务报告</li>
+
+			<div class="btn-group btn-group-md" id="toolbar">
+				<a id='export' class="btn btn-default">
+					<i class="fa fa-share-square-o fa-fw"></i>导出
+				</a>
+				<a class="btn btn-default">
+					<i class="fa fa-refresh fa-fw"></i>重新生成
+				</a>
+			</div>
+		</ol>
+	</div>
+
+	<div class="row">
+		<div class="row">
+			<div class="main-box clearfix report">
+
+				<div id="navbar-example" class="main-box-body col-lg-2">
+					<ul class="nav nav-list">
+						<li class="active" >
+							<a href="#taskInfo" >
+                                <i class="icon-chevron-right"></i>
+                                任务基本信息
+							</a>
+						</li>
+                        <li>
+							<a href="#taskResult">
+								<i class="icon-chevron-right"></i>
+								任务测试结果
+							</a>
+						</li>
+						<li>
+							<a href="#productResult">
+								<i class="icon-chevron-right"></i>
+								产品测试结果
+							</a>
+						</li>
+						<li>
+							<a href="#suggest">
+								<i class="icon-chevron-right"></i>
+								任务优化建议
+							</a>
+						</li>
+					</ul>
+				</div>
+
+				<div class="col-lg-10" id="report-div"><!--style="height:1200px; overflow-y:auto"-->
+                    <header class="main-box-header">
+					    <h1 class="text-center name"><strong>{{ task.name }}评估分析与优化建议报告</strong></h1>
+				    </header>
+					<div class="list-group" id="reports" style="clear:both">
+						<div class="list-group-item clearfix" id="taskInfo">
+							<h2><strong>任务概述</strong></h2>
+                            <div class="rwgs" style="padding-top: 20px;">
+
+                                <div class="col-lg-12 table-responsive">
+                                    <p><strong>任务信息</strong></p>
+                                    <table class="table table-striped table-hover table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <td>任务名称</td>
+                                                <p id="taskid" type="hidden" value="{{ task.id }}"></p>
+                                                <td>任务描述</td>
+                                                <td>任务类型</td>
+                                                <td>创建者</td>
+                                                <td>任务状态</td>
+                                                <td>开始时间</td>
+                                                <td>结束时间</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>{{task.name}}</td>
+                                                <td>{{task.introduction}}</td>
+                                                <td>{{task.type}}</td>
+                                                <td>{{task.user}}</td>
+                                                <td id="task_status">{{task.process}}</td>
+                                                <td id="start_time">{{ task.start_date }} {{task.start_time}}</td>
+                                                <td>{{ task.end_date }} {{task.end_time}}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-lg-12">
+                                    <p><strong>作业流：</strong>
+                                    {%for environmentJob in task.nodes.all%}{{environmentJob.job.name}}{%endfor%}</p>
+                                    <p><strong>环境名称：</strong>{{task.nodes.first.environment.name}}</p>
+                                    <p><strong>环境描述：</strong>{{task.nodes.first.environment.description}}</p>
+                                    <div class="table-responsive">
+                                    <table class="table table-striped table-hover table-bordered" id="rawnodes">
+                                        <thead>
+                                            <tr>
+                                                <td>节点名称</td>
+                                                <td>节点描述</td>
+                                                <td>IP地址</td>
+                                                <td>CPU核数</td>
+                                                <td>CPU主频(Ghz)</td>
+                                                <td>内存大小(G)</td>
+                                                <td>内存速度(MHz)</td>
+                                                <td>硬盘信息</td>
+                                                <td>GPU信息</td>
+                                                <td>NET信息</td>
+                                                <td>操作系统</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        {%for node in task.nodes.first.environment.node.all%}
+                                            <tr id='{{nodeJob.id}}'>
+                                               <td>{{node.name}}</td>
+                                                <td>{{node.introduction}}</td>
+                                                <td>{{node.ip}}</td>
+                                                <td>{{node.cpu_number}}</td>
+                                                <td>{{node.cpu_frequency}}</td>
+                                                <td>{{node.memory}}</td>
+                                                <td>{{node.memory_Speed}}</td>
+                                                <td>
+                                                    {%for disk in node.disk.all%}
+                                                    {{disk.name}}:{{disk.size}}<br/>
+                                                    {%endfor%}
+                                                </td>
+                                                <td>
+                                                    {%for gpu in node.gpu.all%}
+                                                    {{gpu.name}}:{{gpu.number}}<br/>
+                                                    {%endfor%}
+                                                </td>
+                                                <td>
+                                                    {%for net in node.net.all%}
+                                                    {{net.name}}:{{net.number}}<br/>
+                                                    {%endfor%}
+                                                </td>
+                                                <td>{{node.os}}</td>
+                                            </tr>
+                                        {%endfor%}
+                                        </tbody>
+                                    </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="list-group-item clearfix" id="taskResult">
+                            <h2><strong>资源消耗基准对比</strong></h2>
+                            <div class="jzdb" style="padding-top: 20px;">
+                                <div id="CPUChart" class="mychart" style="width: 50%;height: {{height}}px;"></div>
+                                <div class="div" style="display:none"><image class="image CPUChart"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('CPUChart'));
+                                    var option = {
+                                        title: {
+                                            text: '              CPU资源消耗产品排名'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'value',
+                                        },
+                                        yAxis: {
+                                            type: 'category',
+                                            data: [{%for job in job_consume_list_cpu%}'{{job.name}}',{%endfor%}]
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'bar',
+                                                data:[{%for job in job_consume_list_cpu%}'{{job.cpu}}',{%endfor%}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.CPUChart").attr("src",dataurl);
+                                </script>
+                                <div id="NCChart" class="mychart" style="width: 50%;height: {{height}}px; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image NCChart"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('NCChart'));
+                                    var option = {
+                                        title: {
+                                            text: '              内存资源消耗产品排名'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'value',
+                                        },
+                                        yAxis: {
+                                            type: 'category',
+                                            data:[{%for job in job_consume_list_memory%}'{{job.name}}',{%endfor%}]
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'bar',
+                                                data:[{%for job in job_consume_list_memory%}'{{job.memory}}',{%endfor%}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.NCChart").attr("src",dataurl);
+                                </script>
+                                <div id="IOChart" class="mychart" style="width: 50%;height: {{height}}px; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image IOChart"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('IOChart'));
+                                    var option = {
+                                        title: {
+                                            text: '              本地存储资源消耗产品排名'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'value',
+                                        },
+                                        yAxis: {
+                                            type: 'category',
+                                            data:[{%for job in job_consume_list_disk%}'{{job.name}}',{%endfor%}]
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'bar',
+                                                data:[{%for job in job_consume_list_disk%}'{{job.disk}}',{%endfor%}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.IOChart").attr("src",dataurl);
+                                </script>
+                                <div id="NFSChart" class="mychart" style="width: 50%;height: {{height}}px; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image NFSChart"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('NFSChart'));
+                                    var option = {
+                                        title: {
+                                            text: '              网络存储资源消耗产品排名'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'value',
+                                        },
+                                        yAxis: {
+                                            type: 'category',
+                                            data:[{%for job in job_consume_list_nfs%}'{{job.name}}',{%endfor%}]
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'bar',
+                                                data:[{%for job in job_consume_list_nfs%}'{{job.nfs}}',{%endfor%}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.NFSChart").attr("src",dataurl);
+                                </script>
+                                <div id="NETChart" class="mychart" style="width: 50%;height: {{height}}px; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image NETChart"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('NETChart'));
+                                    var option = {
+                                        title: {
+                                            text: '              网络资源消耗产品排名'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'value',
+                                        },
+                                        yAxis: {
+                                            type: 'category',
+                                            data:[{%for job in job_consume_list_network%}'{{job.name}}',{%endfor%}]
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'bar',
+                                                data:[{%for job in job_consume_list_network%}'{{job.network}}',{%endfor%}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.NETChart").attr("src",dataurl);
+                                </script>
+                            </div>
+
+
+                            <h2><strong>资源累计消耗对比</strong></h2>
+                            <div class="jzdb" style="padding-top: 20px;">
+                                <div id="CPUChart_acc" class="mychart" style="width: 50%;height: {{height}}px;"></div>
+                                <div class="div" style="display:none"><image class="image CPUChart_acc"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('CPUChart_acc'));
+                                    var option = {
+                                        title: {
+                                            text: '              CPU资源累计消耗产品排名'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'value',
+                                        },
+                                        yAxis: {
+                                            type: 'category',
+                                            data: [{%for job in job_consume_list_cpu_acc%}'{{job.name}}',{%endfor%}]
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'bar',
+                                                data:[{%for job in job_consume_list_cpu_acc%}'{{job.cpu}}',{%endfor%}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.CPUChart_acc").attr("src",dataurl);
+                                </script>
+                                <div id="NCChart_acc" class="mychart" style="width: 50%;height: {{height}}px; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image NCChart_acc"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('NCChart_acc'));
+                                    var option = {
+                                        title: {
+                                            text: '              内存资源累计消耗产品排名'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'value',
+                                        },
+                                        yAxis: {
+                                            type: 'category',
+                                            data:[{%for job in job_consume_list_memory_acc%}'{{job.name}}',{%endfor%}]
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'bar',
+                                                data:[{%for job in job_consume_list_memory_acc%}'{{job.memory}}',{%endfor%}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.NCChart_acc").attr("src",dataurl);
+                                </script>
+                                <div id="IOChart_acc" class="mychart" style="width: 50%;height: {{height}}px; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image IOChart_acc"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('IOChart_acc'));
+                                    var option = {
+                                        title: {
+                                            text: '              本地存储资源累计消耗产品排名'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'value',
+                                        },
+                                        yAxis: {
+                                            type: 'category',
+                                            data:[{%for job in job_consume_list_disk_acc%}'{{job.name}}',{%endfor%}]
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'bar',
+                                                data:[{%for job in job_consume_list_disk_acc%}'{{job.disk}}',{%endfor%}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.IOChart_acc").attr("src",dataurl);
+                                </script>
+                                <div id="NFSChart_acc" class="mychart" style="width: 50%;height: {{height}}px; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image NFSChart_acc"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('NFSChart_acc'));
+                                    var option = {
+                                        title: {
+                                            text: '              网络存储资源累计消耗产品排名'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'value',
+                                        },
+                                        yAxis: {
+                                            type: 'category',
+                                            data:[{%for job in job_consume_list_nfs_acc%}'{{job.name}}',{%endfor%}]
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'bar',
+                                                data:[{%for job in job_consume_list_nfs_acc%}'{{job.nfs}}',{%endfor%}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.NFSChart_acc").attr("src",dataurl);
+                                </script>
+                                <div id="NETChart_acc" class="mychart" style="width: 50%;height: {{height}}px; float: left;"></div>
+                                <div class="div" style="display:none"><image class="image NETChart_acc"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('NETChart_acc'));
+                                    var option = {
+                                        title: {
+                                            text: '              网络资源累计消耗产品排名'
+                                        },
+                                        xAxis: {
+                                            show: true,
+                                            type: 'value',
+                                        },
+                                        yAxis: {
+                                            type: 'category',
+                                            data:[{%for job in job_consume_list_network_acc%}'{{job.name}}',{%endfor%}]
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'bar',
+                                                data:[{%for job in job_consume_list_network_acc%}'{{job.network}}',{%endfor%}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.NETChart_acc").attr("src",dataurl);
+                                </script>
+                            </div>
+
+                            <h2><strong>系统资源消耗峰值</strong></h2>
+                            <div class="xhfz" style="padding-top: 20px;">
+                                <div class="table-responsive col-md-6">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr class="turnBold">
+                                                <td>资源类型</td>
+                                                <td>峰值消耗应用</td>
+                                                <td>峰值</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>cpu指令执行周期</td>
+                                                <td>{{ system_consume_name.cpu_all_cpi }}</td>
+                                                <td>{{ system_consume_max.cpu_all_cpi }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>cpu空闲占比</td>
+                                                <td>{{ system_consume_name.cpu_all_idle }}</td>
+                                                <td>{{ system_consume_max.cpu_all_idle }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>cpu的系统占用</td>
+                                                <td>{{ system_consume_name.cpu_all_sywa }}</td>
+                                                <td>{{ system_consume_max.cpu_all_sywa }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>cpu浮点计算能力</td>
+                                                <td></td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td>内存总占用率</td>
+                                                <td>{{ system_consume_name.mem_all_mem_ratio }}</td>
+                                                <td>{{ system_consume_max.mem_all_mem_ratio }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="table-responsive  col-md-6">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr class="turnBold">
+                                                <td>资源类型</td>
+                                                <td>峰值消耗应用</td>
+                                                <td>峰值</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>swap空间的占用率</td>
+                                                <td>{{ system_consume_name.mem_all_swap_ratio }}</td>
+                                                <td>{{ system_consume_max.mem_all_swap_ratio }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>磁盘写数据速度</td>
+                                                <td>{{ system_consume_name.disk_all_write }}</td>
+                                                <td>{{ system_consume_max.disk_all_write }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>磁盘读数据速度</td>
+                                                <td>{{ system_consume_name.disk_all_read }}</td>
+                                                <td>{{ system_consume_max.disk_all_read }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>网络发送数据速度</td>
+                                                <td>{{ system_consume_name.net_all_recv }}</td>
+                                                <td>{{ system_consume_max.net_all_recv }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>网络接收数据速度</td>
+                                                <td>{{ system_consume_name.net_all_send }}</td>
+                                                <td>{{ system_consume_max.net_all_send }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <h2><strong>系统应用分类分析</strong></h2>
+                            <div class="flfx" style="overflow:auto;">
+                                <div id="xtfl" style="padding-top: 15px;" class="col-lg-6">
+                                    <li><h2><strong>系统分类：{{ majorType }}</strong></h2></li>
+                                    <div style="padding-top: 10px;">
+                                    <table class="table table-striped table-bordered" >
+                                        <thead>
+                                            <tr>
+                                                <td><strong>资源类型</strong></td>
+                                                <td><strong>资源消耗基准</strong></td>
+                                                <td><strong>得分</strong></td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>CPU</td>
+                                                <td>{{ benchmark.cpu }}</td>
+                                                <td>{{ mainFeature.cpu }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>网络</td>
+                                                <td>{{ benchmark.network }}</td>
+                                                <td>{{ mainFeature.network }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>内存</td>
+                                                <td>{{ benchmark.memory }}</td>
+                                                <td>{{ mainFeature.memory }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>本地存储资源</td>
+                                                <td>{{ benchmark.disk }}</td>
+                                                <td>{{ mainFeature.disk }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>网络存储资源</td>
+                                                <td>{{ benchmark.nfs }}</td>
+                                                <td>{{ mainFeature.nfs }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div id="xtflRadar" style="width: 100%;height: 300%;"></div>
+                                    <div class="div" style="display:none"><image class="image xtflRadar"/></div>
+                                    </div>
+                                    <script>
+                                        var myChart = echarts.init(document.getElementById('xtflRadar'));
+                                        var option = {
+                                            tooltip: {},
+                                            radar: {
+                                                indicator: [
+                                                   { name: 'CPU', max: 1},
+                                                   { name: '本地存储资源', max: 1},
+                                                   { name: '内存', max: 1},
+                                                   { name: '网络', max: 1},
+                                                   { name: '网络存储资源', max: 1}
+                                                ]
+                                            },
+                                            series: [{
+                                                type: 'radar',
+                                                data : [
+                                                    {
+                                                        value : [{{ mainFeature.cpu }}, {{ mainFeature.disk }}, {{ mainFeature.memory }}, {{ mainFeature.network }}, {{ mainFeature.nfs }}],
+                                                    }
+                                                ]
+                                            }]
+                                        };
+                                        myChart.setOption(option);
+                                        var dataurl= myChart.getDataURL();
+                                        $(".image.xtflRadar").attr("src",dataurl);
+                                    </script>
+                                </div>
+                                <div id="xzyx" style="padding-top: 20px;" class="col-lg-6">
+                                    <li><h2><strong>显著影响指标：{{ paraScoreSorted.8.name }}</strong></h2></li>
+                                    <div style="padding-top: 10px;">
+                                    <table class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <td><strong>指标类型</strong></td>
+                                                <td><strong>指标影响基准</strong></td>
+                                                <td><strong>得分</strong></td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>{{paraScoreSorted.8.name}}</td>
+                                                <td>{{paraScoreSorted.8.benchmark}}</td>
+                                                <td>{{paraScoreSorted.8.mainFeature}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>{{paraScoreSorted.7.name}}</td>
+                                                <td>{{paraScoreSorted.7.benchmark}}</td>
+                                                <td>{{paraScoreSorted.7.mainFeature}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>{{paraScoreSorted.6.name}}</td>
+                                                <td>{{paraScoreSorted.6.benchmark}}</td>
+                                                <td>{{paraScoreSorted.6.mainFeature}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>{{paraScoreSorted.5.name}}</td>
+                                                <td>{{paraScoreSorted.5.benchmark}}</td>
+                                                <td>{{paraScoreSorted.5.mainFeature}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>{{paraScoreSorted.4.name}}</td>
+                                                <td>{{paraScoreSorted.4.benchmark}}</td>
+                                                <td>{{paraScoreSorted.4.mainFeature}}</td>
+                                            </tr>
+                                             <tr>
+                                                <td>{{paraScoreSorted.3.name}}</td>
+                                                <td>{{paraScoreSorted.3.benchmark}}</td>
+                                                <td>{{paraScoreSorted.3.mainFeature}}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div id="xzyxRadar" style="width: 100%;height: 300%;"></div>
+                                    <div class="div" style="display:none"><image class="image xzyxRadar"/></div>
+                                    </div>
+                                    <script>
+                                        var myChart = echarts.init(document.getElementById('xzyxRadar'));
+                                        var option = {
+                                            tooltip: {},
+                                            radar: {
+                                                indicator: [
+                                                   { name: '{{paraScoreSorted.8.name}}', max: 1},
+                                                   { name: '{{paraScoreSorted.7.name}}', max: 1},
+                                                   { name: '{{paraScoreSorted.6.name}}', max: 1},
+                                                   { name: '{{paraScoreSorted.5.name}}', max: 1},
+                                                   { name: '{{paraScoreSorted.4.name}}', max: 1},
+                                                   { name: '{{paraScoreSorted.3.name}}', max: 1},
+                                                ]
+                                            },
+                                            series: [{
+                                                type: 'radar',
+                                                data : [
+                                                    {
+                                                        value : [{{paraScoreSorted.8.mainFeature}}, {{paraScoreSorted.7.mainFeature}}, {{paraScoreSorted.6.mainFeature}}, {{paraScoreSorted.5.mainFeature}}, {{paraScoreSorted.4.mainFeature}}, {{paraScoreSorted.3.mainFeature}}],
+                                                    }
+                                                ]
+                                            }]
+                                        };
+                                        myChart.setOption(option);
+                                        var dataurl= myChart.getDataURL();
+                                        $(".image.xzyxRadar").attr("src",dataurl);
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+
+						<div class="list-group-item clearfix" id="productResult">
+							<h2><strong>各产品概述</strong></h2>
+							<div class="table-responsive" style="padding-top: 20px;overflow-x: auto;">
+								<table class="table table-striped table-bordered">
+									<thead>
+										<tr class="turnBold">
+											<td>产品名称</td>
+											<td>CPU负载</td>
+											<td>CPU集中度</td>
+											<td>内存负载</td>
+											<td>IO负载</td>
+                                            <td>IO集中度</td>
+                                            <td>网络负载</td>
+                                            <td>网络集中度</td>
+                                            <td>应用类型判别</td>
+                                            <td>查看详细</td>
+										</tr>
+									</thead>
+									<tbody id="mainBody">
+                                        {%for jobInfo in jobInfos%}
+                                            {%  if jobInfo.benchmark  %}
+                                            <tr id='{{jobInfo.id}}'>
+                                                <td>{{jobInfo.job_name}}</td>
+                                                <td>{{ jobInfo.benchmark.benchmark_sorted_consume_score.cpu_all_idle  }}</td><!--CPU负载-->
+                                                <td>{{ jobInfo.benchmark.benchmark_time_density_score.cpu_all_idle  }}</td><!--CPU集中度-->
+                                                <td>{{ jobInfo.benchmark.benchmark_sorted_consume_score.mem_all_mem_ratio  }}</td><!--内存负载-->
+                                                <td>{{ jobInfo.benchmark.benchmark_sorted_consume_score.disk_all_read  }}</td><!--IO负载，读-->
+                                                <td>{{ jobInfo.benchmark.benchmark_time_density_score.disk_all_read  }}</td><!--IO集中度，读-->
+                                                <td>{{ jobInfo.benchmark.benchmark_sorted_consume_score.net_all_send  }}</td><!--网络负载，发-->
+                                                <td>{{ jobInfo.benchmark.benchmark_time_density_score.net_all_send  }}</td><!--网络集中度，发-->
+                                                <td class="exist">{{ jobInfo.job_type }}</td><!--应用类型判别-->
+                                                <td><a class="btn jobreport" href="pfmtstReport/{{jobInfo.id}}" class='getReport'>查看报告</a></td>
+                                            </tr>
+                                            {% endif %}
+                                        {%endfor%}
+								
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="list-group-item clearfix" id="suggest">
+							<h2><strong>优化建议</strong></h2>
+                            <div style="padding-top: 20px;">
+							<div class="advice">
+								<span><strong>软件优化建议 </strong></span>
+                                {%for suggestion in programSugession%}
+							<!--	<span><strong>建议该单作业部署在设置3上发挥其最佳性能</strong></span> -->
+								<p>{{ suggestion.description }}</p>
+                                {%endfor%}
+							</div>
+							<div class="advice">
+								<span><strong>硬件优化建议 </strong></span>
+							<!--	<span><strong>建议该单作业部署在分析节点上发挥其最佳性能</strong></span> -->
+                                {%for suggestion in hardwareSugession%}
+								<p>{{ suggestion.description }}</p>
+                                {%endfor%}
+							</div>
+                            </div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<footer id="footer-bar" class="row" style="opacity: 1;">
+    <p id="footer-copyright" class="col-xs-12">
+    © 2016
+    <a id="aaa" target="_blank">copyright</a> . Powered by BUPT.
+    </p>
+</footer>
+
+{% endblock %}
+
+{% block javascript %}
+
+<script src="{% static "js/report.js" %}"></script>
+<script type="text/javascript" src="{% static "js/lib/jquery.js"%}" ></script>
+<script src="{% static "js/FileSaver.js" %}"></script>
+    <script src="{% static "js/jquery.wordexport.js" %}"></script>
+{% endblock %}
+

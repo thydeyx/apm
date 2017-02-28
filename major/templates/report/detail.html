@@ -1,0 +1,728 @@
+{% extends "base/page-base.html" %}
+{% block title %}产品报告{% endblock %}
+
+{% block css %}
+{% load staticfiles %}
+<link href="{% static "css/style.css" %}" rel="stylesheet">
+<link href="{% static "css/report.css" %}" rel="stylesheet">
+    <script src="{% static "js/echarts.min.js"%}"></script>
+{% endblock %}
+
+{% block side-nav %}
+{% include "side-nav/side-nav-index.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="content container">
+	<div class="row">
+		<ol class="breadcrumb">
+			<span>当前所在位置：</span>
+			<li><a href="/task/{{taskid}}/pfmtstReport">任务</a></li>
+			<li class="active">产品报告</li>
+
+			<div class="btn-group btn-group-md" id="toolbar">
+				<a id='export' class="btn btn-default">
+					<i class="fa fa-share-square-o fa-fw"></i>导出
+				</a>
+				<a class="btn btn-default">
+					<i class="fa fa-refresh fa-fw"></i>重新生成
+				</a>
+			</div>
+		</ol>
+	</div>
+
+	<div class="row">
+		<div class="row">
+			<div class="main-box clearfix report">
+				<div id="navbar-example" class="main-box-body col-lg-2">
+					<ul class="nav nav-list">
+						<li class="active">
+							<a href="#environmentInfo">
+								<i class="icon-chevron-right"></i>
+                                测试信息概述
+							</a>
+						</li>
+                        <li>
+							<a href="#testAbstract">
+								<i class="icon-chevron-right"></i>
+								测试结果摘要
+							</a>
+						</li>
+                        <li>
+							<a href="#abnormal">
+								<i class="icon-chevron-right"></i>
+								异常与瓶颈摘要
+							</a>
+						</li>
+						<li>
+							<a href="#productEvaluate">
+								<i class="icon-chevron-right"></i>
+								产品性能评估
+							</a>
+						</li>
+						<li>
+							<a href="#suggest">
+								<i class="icon-chevron-right"></i>
+								产品优化建议
+							</a>
+						</li>
+					</ul>
+				</div>
+
+                <div class="col-lg-10">
+                <div class="list-group" id="report-div">
+                        <div id="environmentInfo" class="list-group-item clearfix">
+                        <header class="main-box-header">
+			                <h1 class="text-center name"><strong>{{ jobInfo.job_name }}评估分析与优化建议报告</strong></h1>
+		                </header>
+                        <h4><strong>测试环境信息</strong></h4>
+                        <div class="col-lg-12">
+                            <p><strong>作业流：</strong>{%for environmentJob in task.nodes.all%}{{environmentJob.job.name}}{%endfor%}</p>
+                            <p><strong>环境名称：</strong>{{task.nodes.first.environment.name}}</p>
+                            <p><strong>环境描述：</strong>{{task.nodes.first.environment.description}}</p>
+                            <table class="table table-striped table-bordered" id="rawnodes">
+                                <thead>
+                                    <tr>
+                                        <td>节点名称</td>
+                                        <td>节点描述</td>
+                                        <td>IP地址</td>
+                                        <td>CPU核数</td>
+                                        <td>CPU主频(Ghz)</td>
+                                        <td>内存大小(G)</td>
+                                        <td>内存速度(MHz)</td>
+                                        <td>硬盘信息</td>
+                                        <td>GPU信息</td>
+                                        <td>NET信息</td>
+                                        <td>操作系统</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {%for node in task.nodes.first.environment.node.all%}
+                                        <tr id='{{nodeJob.id}}'>
+                                            <td>{{node.name}}</td>
+                                                <td>{{node.introduction}}</td>
+                                                <td>{{node.ip}}</td>
+                                                <td>{{node.cpu_number}}</td>
+                                                <td>{{node.cpu_frequency}}</td>
+                                                <td>{{node.memory}}</td>
+                                                <td>{{node.memory_Speed}}</td>
+                                                <td>
+                                                    {%for disk in node.disk.all%}
+                                                    {{disk.name}}:{{disk.size}}<br/>
+                                                    {%endfor%}
+                                                </td>
+                                                <td>
+                                                    {%for gpu in node.gpu.all%}
+                                                    {{gpu.name}}:{{gpu.number}}<br/>
+                                                    {%endfor%}
+                                                </td>
+                                                <td>
+                                                    {%for net in node.net.all%}
+                                                    {{net.name}}:{{net.number}}<br/>
+                                                    {%endfor%}
+                                                </td>
+                                                <td>{{node.os}}</td>
+                                        </tr>
+                                    {%endfor%}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        </div>
+                        <div id="testAbstract" class="list-group-item clearfix">
+                        <h4><strong>测试结果摘要</strong></h4>
+                        <div class="col-lg-12" >
+                            <table class="table table-striped table-bordered">
+                                <tr>
+                                    <th></th>
+                                    <th>基准消耗</th>
+                                    <th>集中度</th>
+                                    <th>峰值</th>
+                                    <th>平均值</th>
+                                </tr>
+                                <tr>
+                                    <th>CPU资源消耗</th>
+                                    <td>{{ jobInfo.benchmark.benchmark_sorted_consume_score.cpu_all_idle  }}</td><!--CPU负载-->
+                                    <td>{{ jobInfo.benchmark.benchmark_time_density_score.cpu_all_idle  }}</td><!--CPU集中度-->
+                                    <td>{{ jobInfo.statistic.max_score.cpu_all_idle  }}</td><!--CPU峰值-->
+                                    <td>{{ jobInfo.statistic.average_score.cpu_all_idle  }}</td>
+                                </tr>
+                                <tr>
+                                    <th>内存资源消耗</th>
+                                    <td>{{ jobInfo.benchmark.benchmark_sorted_consume_score.mem_all_mem_ratio  }}</td><!--内存负载-->
+                                    <td>{{ jobInfo.benchmark.benchmark_time_density_score.mem_all_mem_ratio  }}</td><!--内存集中度-->
+                                    <td>{{ jobInfo.statistic.max_score.mem_all_mem_ratio}}</td>
+                                    <td>{{ jobInfo.statistic.average_score.mem_all_mem_ratio}}</td>
+                                </tr>
+                                <tr>
+                                    <th>IO资源消耗</th>
+                                    <td>{{ jobInfo.benchmark.benchmark_sorted_consume_score.disk_all_read  }}</td><!--IO负载，读-->
+                                    <td>{{ jobInfo.benchmark.benchmark_time_density_score.disk_all_read  }}</td><!--IO集中度，读-->
+                                    <td>{{ jobInfo.statistic.max_score.disk_all_read  }}</td><!--IO峰值-->
+                                    <td>{{ jobInfo.statistic.average_score.disk_all_read  }}</td>
+                                </tr>
+                                <tr>
+                                    <th>网络资源消耗</th>
+                                    <td>{{ jobInfo.benchmark.benchmark_sorted_consume_score.net_all_send  }}</td><!--网络负载，发-->
+                                    <td>{{ jobInfo.benchmark.benchmark_time_density_score.net_all_send  }}</td><!--网络集中度，发-->
+                                    <td>{{ jobInfo.statistic.max_score.net_all_send  }}</td><!--网络峰值-->
+                                    <td>{{ jobInfo.statistic.average_score.net_all_send  }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        </div>
+
+                    <div id="abnormal" class="list-group-item clearfix">
+                        <h4><strong>异常与瓶颈摘要</strong></h4>
+                        <div class="col-md-12" >
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                <tr>
+                                    <th>异常检查点名称</th>
+                                    <th>检查点类型</th>
+                                    <th>异常检查点描述</th>
+                                    <th>检查点是否正常</th>
+                                </tr>
+                                </thead>
+                                <tbody >
+                                {%for abnormal in abnormalType.all%}
+                                <tr>
+                                    <td>{{ abnormal.name }}</td>
+                                    <td>{{ abnormal.type }}</td>
+                                    <td>{{ abnormal.description }}</td>
+                                    <td class="{{ abnormal.name }} td">&#10004</td>
+                                </tr>
+                                {% endfor %}
+                                {%for abnormal in jobInfo.abnormal.all%}
+                                    <script>
+                                        $('.td.{{ abnormal.name }}').text('\u2716');
+                                    </script>
+                                {%endfor%}
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4><strong>异常与瓶颈</strong></h4>
+                        <div class="col-md-12">
+                            <div id='task-id' style="display:none">{{ taskid }}</div>
+                            <div id='job-id' style="display:none">{{ jobID }}</div>
+                            {%for abnormal in jobInfo.abnormal.all%}
+                            <div class="abnormal_block">
+                                <div class='{{ abnormal.name }} abnormalid' style="display:none">{{ abnormal.id }}</div>
+                                <div class="col-lg-3">
+                                    <li>{{ abnormal.name }}</li>
+                                    <p>开始时间：{{ abnormal.start_time }}</p>
+                                    <p>结束时间：{{ abnormal.end_time }}</p>
+                                    <p>异常描述：{{ abnormal.description }}</p>
+                                    <p class="{{ abnormal.name }} error" style="display:none;color:red">error : 未取到异常数据</p>
+                                    <p class="{{ abnormal.name }} networkError" style="display:none;color:red">error : 网络异常，未取到异常数据</p>
+                                </div>
+                                <div id="{{ abnormal.name }}" style="height:350px;width:70%;overflow: auto;"></div>
+                                <div class="{{ abnormal.name }} div" style="display:none"><!---->
+                                    <image class="{{ abnormal.name }} image"/>
+                                </div>
+                                <script>
+                                try{
+                                    var id='{{ abnormal.name }}';
+                                    var myChart_1 = echarts.init(document.getElementById(id));
+                                    var option_1 = {
+                                        xAxis: [{
+                                                type: 'category',
+                                                data:[],
+                                        }],
+                                        legend:{
+                                            data:[],
+                                        },
+                                        yAxis: {
+                                            type: 'value',
+                                            scale: true,
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        animation : false,
+                                        series: [{
+                                            name: '',
+                                            type: 'line',
+                                            data: []
+                                        },
+                                        {
+                                            name: '',
+                                            type: 'line',
+                                            data: []
+                                        },
+                                        {
+                                            name: '',
+                                            type: 'line',
+                                            data: []
+                                        }]
+                                    };
+                                    $.ajax({
+                                        url: '/report/abnormalData/',
+                                        type: 'post',
+                                        data: {
+                                            "taskid": $("#task-id").text(),
+                                            "jobid":$("#job-id").text(),
+                                            "abnormalid": $(".abnormalid.{{ abnormal.name }} ").text(),
+                                        },
+                                        success: function (jsondata) {
+                                            var data = eval('(' + jsondata + ')');
+                                            if(data.flag===1){
+                                                option_1.xAxis[0].data=data.categories;
+                                                option_1.legend.data=data.legend;
+                                                option_1.series[0].name=data.legend[0];
+                                                option_1.series[1].name=data.legend[1];
+                                                option_1.series[2].name=data.legend[2];
+                                                option_1.series[0].data=data.data1;
+                                                option_1.series[1].data=data.data2;
+                                                option_1.series[2].data=data.data3;
+                                                myChart_1.setOption(option_1);
+                                                var dataurl1= myChart_1.getDataURL();
+                                                $(".{{ abnormal.name }}.image").attr("src",dataurl1);
+                                            }else{
+                                                $(".{{ abnormal.name }}.error").css("display","block");
+                                            }
+                                        },
+                                        error: function () {
+                                            $(".{{ abnormal.name }}.networkError").css("display","block");
+                                            console.log("networkError!!!");
+                                         }
+                                    });
+                                }catch(error){
+                                        console.log(error.message);
+                                }
+                            </script>
+                            </div>
+                            {%endfor%}
+                        </div>
+                    </div>
+                        <div id="productEvaluate" class="list-group-item clearfix">
+		                <h4><strong>产品应用分类分析</strong></h4>
+                            <div class="flfx" style="overflow: auto">
+                                <div id="xtfl" style="overflow:auto;" class="col-lg-6">
+                                    <li>产品分类：{{ majorType }}</li>
+                                    <table class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <td><strong>资源类型</strong></td>
+                                                <td><strong>资源消耗基准</strong></td>
+                                                <td><strong>得分</strong></td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>CPU</td>
+                                                <td>{{ benchmark.cpu }}</td>
+                                                <td>{{ mainFeature.cpu }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>网络</td>
+                                                <td>{{ benchmark.network }}</td>
+                                                <td>{{ mainFeature.network }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>内存</td>
+                                                <td>{{ benchmark.memory }}</td>
+                                                <td>{{ mainFeature.memory }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>本地存储资源</td>
+                                                <td>{{ benchmark.disk }}</td>
+                                                <td>{{ mainFeature.disk }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>网络存储资源</td>
+                                                <td>{{ benchmark.nfs }}</td>
+                                                <td>{{ mainFeature.nfs }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div id="xtflRadar" style="width: 100%;height: 300%;"></div>
+                                    <div class="div" style="display:none"><image class="image 产品分类"/></div>
+                                    <script>
+                                        var myChart = echarts.init(document.getElementById('xtflRadar'));
+                                        var option = {
+                                            tooltip: {},
+                                            radar: {
+                                                indicator: [
+                                                   { name: 'CPU', max: 1},
+                                                   { name: '本地存储资源', max: 1},
+                                                   { name: '内存', max: 1},
+                                                   { name: '网络', max: 1},
+                                                    { name: '网络存储资源', max: 1}
+                                                ]
+                                            },
+                                            series: [{
+                                                type: 'radar',
+                                                data : [
+                                                    {
+                                                        value : [{{ mainFeature.cpu }}, {{ mainFeature.disk }}, {{ mainFeature.memory }}, {{ mainFeature.network }}, {{ mainFeature.nfs }}],
+                                                    }
+                                                ]
+                                            }]
+                                        };
+                                        myChart.setOption(option);
+                                        var dataurl= myChart.getDataURL();
+                                        $(".image.产品分类").attr("src",dataurl);
+                                    </script>
+                                </div>
+                                <div id="xzyx" style="overflow:auto;" class="col-lg-6">
+                                    <li>显著影响指标：{{ paraScoreSorted.8.name }}</li>
+                                    <table class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <td><strong>指标类型</strong></td>
+                                                <td><strong>指标影响基准</strong></td>
+                                                <td><strong>得分</strong></td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>{{paraScoreSorted.8.name}}</td>
+                                                <td>{{paraScoreSorted.8.benchmark}}</td>
+                                                <td>{{paraScoreSorted.8.mainFeature}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>{{paraScoreSorted.7.name}}</td>
+                                                <td>{{paraScoreSorted.7.benchmark}}</td>
+                                                <td>{{paraScoreSorted.7.mainFeature}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>{{paraScoreSorted.6.name}}</td>
+                                                <td>{{paraScoreSorted.6.benchmark}}</td>
+                                                <td>{{paraScoreSorted.6.mainFeature}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>{{paraScoreSorted.5.name}}</td>
+                                                <td>{{paraScoreSorted.5.benchmark}}</td>
+                                                <td>{{paraScoreSorted.5.mainFeature}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>{{paraScoreSorted.4.name}}</td>
+                                                <td>{{paraScoreSorted.4.benchmark}}</td>
+                                                <td>{{paraScoreSorted.4.mainFeature}}</td>
+                                            </tr>
+                                             <tr>
+                                                <td>{{paraScoreSorted.3.name}}</td>
+                                                <td>{{paraScoreSorted.3.benchmark}}</td>
+                                                <td>{{paraScoreSorted.3.mainFeature}}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div id="xzyxRadar" style="width: 100%;height: 300%;"></div>
+                                    <div class="div" style="display:none"><image class="image 显著影响指标"/></div>
+                                    <script>
+                                        var myChart = echarts.init(document.getElementById('xzyxRadar'));
+                                        var option = {
+                                            tooltip: {},
+                                            radar: {
+                                                indicator: [
+                                                   { name: '{{paraScoreSorted.8.name}}', max: 1},
+                                                   { name: '{{paraScoreSorted.7.name}}', max: 1},
+                                                   { name: '{{paraScoreSorted.6.name}}', max: 1},
+                                                   { name: '{{paraScoreSorted.5.name}}', max: 1},
+                                                   { name: '{{paraScoreSorted.4.name}}', max: 1},
+                                                   { name: '{{paraScoreSorted.3.name}}', max: 1},
+                                                ]
+                                            },
+                                            series: [{
+                                                type: 'radar',
+                                                data : [
+                                                    {
+                                                        value : [{{paraScoreSorted.8.mainFeature}}, {{paraScoreSorted.7.mainFeature}}, {{paraScoreSorted.6.mainFeature}}, {{paraScoreSorted.5.mainFeature}}, {{paraScoreSorted.4.mainFeature}}, {{paraScoreSorted.3.mainFeature}}],
+                                                    }
+                                                ]
+                                            }]
+                                        };
+                                        myChart.setOption(option);
+                                        var dataurl= myChart.getDataURL();
+                                        $(".image.显著影响指标").attr("src",dataurl);
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="speedEvaluate" class="list-group-item clearfix">
+		                <h4><strong>加速比分析</strong></h4>
+
+                        <!--
+                            <div class="col-lg-2" style="width:19%;">
+                                <li style="margin-left: 40px;">浮点计算能力加速比：{{ speedUp.0.flops }}</li>
+                                <div id="floatChart2" style="width:125%; height: 250%;"></div>
+                                <div class="div" style="display:none"><image class="image 浮点计算能力加速比"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('floatChart2'));
+                                    var option = {
+                                        /*title: {
+                                            text: '              CPU资源消耗产品排名'
+                                        },*/
+                                        xAxis: {
+                                            type : 'category',
+                                            data : ['配置1', '配置2', '配置3', '配置4']
+                                        },
+                                        yAxis: {
+                                            type: 'value',
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        animation : false,
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'line',
+                                                data:[{{ speedTrend.4.time_up }}, {{ speedTrend.5.time_up }}, {{ speedTrend.6.time_up }}, {{ speedTrend.7.time_up }}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.浮点计算能力加速比").attr("src",dataurl);
+                                </script>
+                            </div>
+                            <div class="col-lg-2" style="width:19%;">
+                                <li style="margin-left: 40px;">IO能力加速比：{{ speedUp.0.IO }}</li>
+                                <div id="IOChart2" style="width:125%; height: 250%;"></div>
+                                <div class="div" style="display:none"><image class="image IO能力加速比"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('IOChart2'));
+                                    var option = {
+                                        /*title: {
+                                            text: '              CPU资源消耗产品排名'
+                                        },*/
+                                        xAxis: {
+                                            type : 'category',
+                                            data : ['配置1', '配置2', '配置3', '配置4']
+                                        },
+                                        yAxis: {
+                                            type: 'value',
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        animation : false,
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'line',
+                                                data:[{{ speedTrend.8.time_up }}, {{ speedTrend.9.time_up }}, {{ speedTrend.10.time_up }}, {{ speedTrend.11.time_up }}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.IO能力加速比").attr("src",dataurl);
+                                </script>
+                            </div>
+                            <div class="col-lg-2" style="width:19%;">
+                                <li style="margin-left: 40px;">内存能力加速比：{{ speedUp.0.mem }}</li>
+                                <div id="memChart2" style="width:125%; height: 250%;"></div>
+                                <div class="div" style="display:none"><image class="image 内存能力加速比"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('memChart2'));
+                                    var option = {
+                                        /*title: {
+                                            text: '              CPU资源消耗产品排名'
+                                        },*/
+                                        xAxis: {
+                                            type : 'category',
+                                            data : ['配置1', '配置2', '配置3', '配置4']
+                                        },
+                                        yAxis: {
+                                            type: 'value',
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        animation : false,
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'line',
+                                                data:[{{ speedTrend.12.time_up }}, {{ speedTrend.13.time_up }}, {{ speedTrend.14.time_up }}, {{ speedTrend.15.time_up }}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.内存能力加速比").attr("src",dataurl);
+                                </script>
+                            </div>
+                            <div class="col-lg-2" style="width:19%;">
+                                <li style="margin-left: 40px;">网络能力加速比：{{ speedUp.0.net }}</li>
+                                <div id="netChart2" style="width:125%; height: 250%;"></div>
+                                <div class="div" style="display:none"><image class="image 网络能力加速比"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('netChart2'));
+                                    var option = {
+                                        /*title: {
+                                            text: '              CPU资源消耗产品排名'
+                                        },*/
+                                        xAxis: {
+                                            type : 'category',
+                                            data : ['配置1', '配置2', '配置3', '配置4']
+                                        },
+                                        yAxis: {
+                                            type: 'value',
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        animation : false,
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'line',
+                                                data:[{{ speedTrend.16.time_up }}, {{ speedTrend.17.time_up }}, {{ speedTrend.18.time_up }}, {{ speedTrend.19.time_up }}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.网络能力加速比").attr("src",dataurl);
+                                </script>
+                            </div>
+                        -->
+                            {%for simulationEnvironment in task.simulationEnvironments.all%}
+                                <div class="col-md-12" style="overflow:auto;">
+                                    <p><strong>对比环境名称：</strong>{{simulationEnvironment.name}}</p>
+                                    <p><strong>对比环境描述：</strong>{{simulationEnvironment.description}}</p>
+                                </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover table-bordered" id="rawnodes">
+                                        <thead>
+                                            <tr>
+                                                <td>节点名称</td>
+                                                <td>节点描述</td>
+                                                <td>IP地址</td>
+                                                <td>CPU核数</td>
+                                                <td>CPU主频(Ghz)</td>
+                                                <td>内存大小(G)</td>
+                                                <td>内存速度(MHz)</td>
+                                                <td>硬盘信息</td>
+                                                <td>GPU信息</td>
+                                                <td>NET信息</td>
+                                                <td>操作系统</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        {%for node in simulationEnvironment.node.all%}
+                                            <tr id='{{nodeJob.id}}'>
+                                                <td>{{node.name}}</td>
+                                                <td>{{node.introduction}}</td>
+                                                <td>{{node.ip}}</td>
+                                                <td>{{node.cpu_number}}</td>
+                                                <td>{{node.cpu_frequency}}</td>
+                                                <td>{{node.memory}}</td>
+                                                <td>{{node.memory_Speed}}</td>
+                                                <td>
+                                                    {%for disk in node.disk.all%}
+                                                    {{disk.name}}:{{disk.size}}<br/>
+                                                    {%endfor%}
+                                                </td>
+                                                <td>
+                                                    {%for gpu in node.gpu.all%}
+                                                    {{gpu.name}}:{{gpu.number}}<br/>
+                                                    {%endfor%}
+                                                </td>
+                                                <td>
+                                                    {%for net in node.net.all%}
+                                                    {{net.name}}:{{net.number}}<br/>
+                                                    {%endfor%}
+                                                </td>
+                                                <td>{{node.os}}</td>
+                                            </tr>
+                                        {%endfor%}
+                                        </tbody>
+                                    </table>
+                            </div>
+                        {%endfor%}
+
+                            <div class="col-lg-12">
+                                <h4><strong>加速比图表</strong></h4>
+                                <div class="col-lg-2 col-lg-offset-2" id="CPUChart2" style="width:800px; height: 300px;align-content: center"></div>
+                                <div class="div" style="display:none"><image class="image 计算能力加速比"/></div>
+                                <script>
+                                    var myChart = echarts.init(document.getElementById('CPUChart2'));
+                                    var option = {
+                                        xAxis: {
+                                            type : 'category',
+                                            data : [{%for cmpconfig_time in cmpconfig_jobs%}"{{ cmpconfig_time.nodename }}",{%endfor%}]
+                                        },
+                                        yAxis: {
+                                            type: 'value',
+                                        },
+                                        tooltip:{
+                                            trigger:'axis'
+                                        },
+                                        animation : false,
+                                        grid:{
+                                            containLabel: true
+                                        },
+                                        series: [
+                                            {
+                                                type:'line',
+                                                data:[{%for cmpconfig_time in cmpconfig_jobs%}"{{ cmpconfig_time.time }}",{%endfor%}]
+                                            }]
+                                    };
+                                    myChart.setOption(option);
+                                    var dataurl= myChart.getDataURL();
+                                    $(".image.计算能力加速比").attr("src",dataurl);
+                                </script>
+                            </div>
+                        </div>
+
+                        <div id="suggest" class="list-group-item clearfix">
+		                    <h4><strong>优化建议</strong></h4>
+                            <div class="col-lg-12">
+							<div class="advice">
+								<span><strong>软件优化建议 </strong></span>
+                                {%for suggestion in programSugession%}
+								<p>{{ suggestion.description }}</p>
+                                {%endfor%}
+							</div>
+							<div class="advice">
+								<span><strong>硬件优化建议 </strong></span>
+                                {%for suggestion in hardwareSugession%}
+								<p>{{ suggestion.description }}</p>
+                                {%endfor%}
+							</div>
+                            </div>
+                        </div>
+	                </div>
+                </div>
+			</div>
+
+		</div>
+
+	</div>
+
+	<div id="bg"></div>
+</div>
+
+<footer id="footer-bar" class="row" style="opacity: 1;">
+    <p id="footer-copyright" class="col-xs-12">
+    © 2016
+    <a id="aaa" target="_blank">copyright</a> . Powered by BUPT.
+    </p>
+</footer>
+
+{% endblock %}
+
+{% block javascript %}
+
+<script type="text/javascript" src="{% static "js/lib/jquery.js"%}" ></script>
+<script src="{% static "js/report.js" %}"></script>
+<script src="{% static "js/FileSaver.js" %}"></script>
+    <script src="{% static "js/jquery.wordexport.js" %}"></script>
+
+{% endblock %}
+

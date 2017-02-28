@@ -1,0 +1,163 @@
+{% extends "base/page-base.html" %}
+{% block title %}异常报告{% endblock %}
+
+{% load staticfiles %}
+{% block css %}
+<link href="{% static "css/style.css" %}" rel="stylesheet">
+<link href="{% static "css/compiled/report.css" %}" rel="stylesheet">
+{% endblock %}
+
+
+{% block side-nav %}
+{% include "side-nav/side-nav-index.html" %}
+{% endblock %}
+
+
+{% block content %}
+    <!-- main container -->
+<div class="content container">
+        <div class="row">
+            <ol class="breadcrumb">
+                <span>当前所在位置：</span>
+                <li>
+                    <a href="/task/{{taskid}}">任务</a>
+                </li>
+                <li class="active">任务报告</li>
+            </ol>
+            <!-- breadcrumb end-->
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="btn-group btn-group-md panel1" role="group" aria-label="...">
+                    <a id='export' class="btn btn-default">
+                    <i class="fa fa-share-square-o fa-fw"></i> 导出
+                    </a>
+                    <a class="btn btn-default">
+                    <i class="fa fa-repeat fa-fw"></i> 重新生成
+                    </a>
+                </div>
+            </div>
+            <!-- navbuttongroup end-->
+        </div>
+        <div class="row">
+            <div class="row">
+                <div class="main-box clearfix report">
+                    <header class="main-box-header">
+                        <h1 class="text-center">异常事件报告</h1>
+                    </header>
+                    <div id="navbar-example" class="main-box-body col-lg-2">
+                        <ul class="nav nav-list adb">
+                            <li class="active">
+                                <a href="#gaishu">
+                                <i class="icon-chevron-right"></i>
+                                任务概述
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#io-err">
+                                <i class="icon-chevron-right"></i>
+                                IO升高
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#net-err">
+                                <i class="icon-chevron-right"></i>
+                                网络异常
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-10">
+                        <div class="list-group" id='reports'  style="clear: both">
+                            <div class="list-group-item clearfix" id="gaishu">
+                                <div class="col-lg-3">
+                                    
+                                    <a href="#overview" id="overview"></a><h4>任务概述</h4>
+                                    <ul>
+                                        <li>开始时间：{{task.start_time}}</li>
+                                        <li>结束时间：{{task.end_time}}</li>
+                                        <li>任务创建：{{task.user}}</li>
+                                        <li>任务类型：{{task.type}}</li>
+                                        <li>任务参数：Disk Read,Disk Write,IO/Sec</li>
+                                    </ul>
+                                </div>
+                                <div class="col-lg-9">
+                                    <p>涉及节点：</p>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover table-bordered " id="rawnodes">
+                                            <thead>
+                                                <tr>
+                                                    <td>节点名称</td>
+                                                    <td>节点描述</td>
+                                                    <td>IP地址</td>
+                                                    <td>服务器类型</td>
+                                                    <td>操作系统</td>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            {%for node in nodes%}
+                                                 <tr id='{{node.id}}'>
+                                                    <td>{{node.name}}</td>
+                                                    <td>{{node.introduction}}</td>
+                                                    <td>{{node.ip}}</td>
+                                                    <td>{{node.type}}</td>
+                                                    <td>{{node.os}}</td>    
+                                                </tr>
+                                            {%endfor%}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="list-group-item clearfix io-err" id="io-err">
+                            <div class="col-lg-3">
+                                    <a href="#io-error" id="io-error"></a>
+                                    <h4><span>IO升高</span><a href="/task/{{taskid}}/unuslReport/ioedit"><i class="fa fa-edit fa-lg"></i></a>
+                                </h4>
+                                <ul>
+                                </ul>
+                            </div>
+                            <div class="col-lg-9">
+                            </div>
+                        </div>
+                        <div class="list-group-item clearfix net-err" id="net-err">
+                            <div class="col-lg-3">
+                                <div class="col-lg-12">
+                                    <a href="#io-error" id="net-error"></a>
+                                    <h4><span>IO升高</span><a href="net-edit.html"><i class="fa fa-edit fa-lg"></i></a>
+                                </h4></div>
+                                <ul>
+                                </ul>
+                            </div>
+                            <div class="col-lg-9">
+                            </div>
+                        </div>
+                        <div class="list-group-item">
+                            <i class="fa fa-plus-circle fa-5x" id="update"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!-- task list end-->
+</div>
+<footer id="footer-bar" class="row" style="opacity: 1;">
+    <p id="footer-copyright" class="col-xs-12">
+    © 2015
+    <a id="aaa" target="_blank">copyright</a> . Powered by BUPT.
+    </p>
+</footer>
+<!-- page-content -->
+{% endblock %}
+
+
+{% block javascript %}
+<script src="{% static "js/report.js" %}"></script>
+<script src="{% static "js/FileSaver.js" %}"></script>
+<script src="{% static "js/jquery.wordexport.js" %}"></script>
+<script src="{% static "js/jquery.pin.js"%}"></script>
+<script type="text/javascript">
+    $(".adb").pin();
+</script>
+{% endblock %}

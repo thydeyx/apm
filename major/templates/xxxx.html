@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<script src="/static/js/jquery.js"></script>
+    <script type="text/javascript">
+        $.getJSON('/hello/',function(data){
+            console.log(data[0]);
+            //alert(data[0]['cpu_number']);
+        });
+    </script>
+</body>
+</html>

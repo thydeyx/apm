@@ -1,0 +1,208 @@
+{% extends "base/page-base.html" %}
+{% block title %}对比环境配置管理{% endblock %}
+{% load staticfiles %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static "css/compiled/simulationEnvironmentConfig.css" %}"rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block side-nav %}
+{% include "side-nav/side-nav-config.html" %}
+{% endblock %}
+
+{% block content %}
+    <!-- main container -->
+    <div class="content container">
+        <div class="row">
+            <ol class="breadcrumb">
+                <span>当前所在位置：</span>
+                <li><a href="">配置管理</a></li>
+                <li class="active">对比环境配置管理</li>
+            </ol>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="main-box">
+
+                <!-- Default panel contents -->
+                <div class="main-box-header clearfix">
+                    <h2 class="pull-left">对比环境配置列表</h2>
+                    <a class="btn btn-primary pull-right" data-toggle="modal" data-target='#newSimulationEnvironmentModal' id="add-simulationEnvironment"> <i class="fa fa-plus fa-fw"></i>新增对比环境配置</a>
+                </div>
+
+                <div class="main-box-body">
+                    <div class="row">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-bordered " id="rawSimulationEnvironments">
+                                    <thead>
+                                        <tr>
+                                            <td>序号</td>
+                                            <td>环境配置名</td>
+                                            <td>环境配置描述</td>
+                                            <td>真实环境</td>
+                                            <td>配置节点</td>
+                                            <td>操作</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {%for simulationEnvironment in simulationEnvironments%}
+                                            <tr id='{{simulationEnvironment.id}}'>
+                                            <th>{{forloop.counter}}</th>
+                                            <td>{{simulationEnvironment.name}}</td>
+                                            <td>{{simulationEnvironment.description}}</td>
+                                            <td>{{simulationEnvironment.environment.name}}</td>
+                                            <td>
+                                                {% for node in simulationEnvironment.node.all %}
+                                                    {{ node.name }}
+                                                    <br />
+                                                {% endfor %}
+                                            </td>
+                                            <td>
+                                            <a data-toggle='modal' class='btn btn-editSimulationEnvironment'><i class='fa fa-pencil-square-o'></i></a>
+                                            <a data-toggle='modal' class='btn btn-deleteSimulationEnvironment'><i class='fa fa-times'></i></a>
+                                            </td>
+                                        </tr>
+                                        {%endfor%}
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!--（Modal） -->
+    <div class="modal fade SimulationEnvironmentModal" id="editSimulationEnvironmentModal" tabindex="-1" role="dialog" aria-labelledby="editSimulationEnvironmentModal" aria-hidden="true">
+        <div class="modal-dialog editSimulationEnvironmentModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="editModalLabel">编辑对比环境配置</h4>
+                </div>
+                <div class="modal-body">
+                    <form  id='form-edit-simulationEnvironment' class="row">
+                        <input type="text" name='simulationEnvironment-id' class='simulationEnvironment-id' value='' style="display:none" />
+                        <div class="form-group col-md-6">
+                            <label for="">对比环境配置名</label>
+                            <input type="text" class="form-control simulationEnvironment-name" name='simulationEnvironment-name'id='edit-name' placeholder="">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="" >对比环境配置描述</label>
+                            <input type="text" class="form-control simulationEnvironment-description" name='simulationEnvironment-description' id='edit-description'placeholder="">
+                        </div>
+
+                        <div class="form-group col-md-6 nodes-sublevel simulationEnvironment-nodes" id="simulationEnvironment-nodes">
+                        <label for="">所有节点：</label>
+                            <div class="list-group">
+                                    {% for node in nodes %}
+                                        <a class="list-group-item ">{{node.name}}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        <div class="form-group col-md-6 nodes-box">
+                            <div class="nodes-box-title">
+                                <label for="">已选节点列表：</label>
+                             </div>
+                             <div class="list-group sltnodes" name="sltnodes"></div>
+                        </div>
+                         <div class="form-group col-md-7">
+                            <label for="" >真实环境</label>
+                            <select type="text" class="form-control simulationEnvironment-environment" name='simulationEnvironment-environment' id='edit-environment'placeholder="">
+                             {% for environment in environments %}
+                                        <option value="{{environment.id}}">{{environment.name}}</option>
+                                    {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary">保存</button>
+                </div>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal -->
+
+
+    <!--（Modal） -->
+    <div class="modal fade SimulationEnvironmentModal" id="newSimulationEnvironmentModal" tabindex="-1" role="dialog" aria-labelledby="newSimulationEnvironmentModal" aria-hidden="true">
+        <div class="modal-dialog newSimulationEnvironmentModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="newModalLabel">新增环境配置</h4>
+                </div>
+                <div class="modal-body">
+                    <form id='form-add-simulationEnvironment' class="row">
+                        <div class="form-group col-md-6">
+                            <label for="">环境配置名</label>
+                            <input type="text" class="form-control simulationEnvironment-name" name='simulationEnvironment-name'id='add-name' placeholder="">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="" >环境配置描述</label>
+                            <input type="text" class="form-control simulationEnvironment-description" name='simulationEnvironment-description' id='add-description'placeholder="">
+                        </div>
+                       <div class="form-group col-md-6 nodes-sublevel" id="simulationEnvironment-nodes">
+                        <label for="">所有节点：</label>
+                            <div class="list-group">
+                                    {% for node in nodes %}
+                                        <a class="list-group-item ">{{node.name}}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="form-group col-md-6 nodes-box">
+                            <div class="nodes-box-title">
+                                <label for="">已选节点列表：</label>
+                             </div>
+                             <div class="list-group sltnodes" name="sltnodes"></div>
+                            </div>
+                             <div class="form-group col-md-7">
+                                <label for="" >真实环境</label>
+                                <select type="text" class="form-control simulationEnvironment-environment" name='simulationEnvironment-environment' id='add-environment'placeholder="">
+                                    {% for environment in environments %}
+                                        <option value="{{environment.id}}">{{environment.name}}</option>
+                                    {% endfor %}
+                            </select>
+                            </div>
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary">保存</button>
+                </div>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal -->
+
+
+     <!--（Modal）删除环境弹窗 -->
+     <div class="modal fade" id="deleteSimulationEnvironmentModal" tabindex="-1" role="dialog" aria-labelledby="deleteSimulationEnvironmentModal" aria-hidden="true">
+        <div class="modal-dialog simulationEnvironmentDeleteModal">
+             <div class="modal-content">
+                 <div class="modal-body">
+                     <h4 class="modal-title text-center">确认要删除该环境配置？<p>(删除后不可恢复)</p></h4>
+                 </div>
+                 <div class="modal-footer">
+                     <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">取消</button>
+                     <button type="button" class="btn btn-danger btn-sm">确认删除</button>
+                 </div>
+             </div>
+        </div><!-- /.modal-content -->
+     </div><!-- /.modal -->
+
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static "js/simulationEnvironmentConfig.js"%}"></script>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}

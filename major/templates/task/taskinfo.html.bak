@@ -1,0 +1,296 @@
+{% extends "base/page-base.html" %}
+{% block title %}任务资料{% endblock %}
+
+{% load staticfiles %}
+
+{% block css %}
+<link href="{% static "css/compiled/secondTask.css" %}"rel="stylesheet">
+{% endblock %}
+{% block side-nav %}
+{% include "side-nav/side-nav-index.html" %}
+{% endblock %}
+
+{% block content %}
+<!-- main container -->
+<div class="content container">
+    <div class="row">
+        <ol class="breadcrumb">
+            <span>当前所在位置：</span>
+            <li>
+                <a href="#">任务</a>
+            </li>
+            <li class="active">详细</li>
+        </ol>
+    </div>
+    
+    <div class="row">
+        <div class="btn-group btn-group-md btn-control" role="group" aria-label="...">
+            <a class="btn btn-default " id="task_start">
+                <i class="fa fa-play fa-fw"></i>
+                <span>开始任务</span>
+
+            </a>
+            <a class="btn btn-default" id="task_stop">
+                <i class="fa fa-stop fa-fw"></i>
+                <span>停止任务</span>
+            </a>
+        </div>
+
+        <div class="btn-group btn-group-md pull-right " role="group" aria-label="...">
+            <a class="btn btn-default disabled" href="pfmtstReport">性能检测报告</a>
+            <a class="btn btn-default btn-err" href="unuslReport">异常事件报告</a>
+            <a class="btn btn-default disabled" href="sysevlReport">系统评估报告</a>
+        </div>
+    </div>
+   
+    <div class="panel panel-default">
+        <div class="panel-heading">任务信息</div>
+        <div class="panel-body">
+            <div class="col-lg-6 col-md-6">
+                <div class="col-md-6 col-lg-6">
+                    <p>任务名称：{{task.name}}</p>
+                </div>
+                <div class="col-md-6 col-lg-6">
+                    <p>任务类型：{{task.type}}</p>
+                </div>
+                <div class="col-md-6 col-lg-6">
+                    <p>开始时间: {{task.start_time}}</p>
+                </div>
+                <div class="col-md-6 col-lg-6">
+                    <p>任务参数: sys%,memory%...</p>
+                </div>
+                <div class="col-md-12 col-lg-12">
+                    <p>任务创建: {{task.user}}</p>
+                </div>
+
+                <div class="col-md-12 col-lg-12">
+                    <label>数据采集：</label>
+
+                    <div class="progress progress-striped" id="data-collect">
+                        <div class="progress-bar progress-bar-danger " role="progressbar " aria-valuenow="100"
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="col-md-12 col-lg-12">
+                    <label>应用特征识别：</label>
+
+                    <div class="progress progress-striped" id="feature-recog">
+                        <div class="progress-bar progress-bar-success " role="progressbar " aria-valuenow="60"
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <div class="col-md-12 col-lg-12">
+                    <label for="">生成节点报告：</label>
+
+                    <div class="progress progress-striped" id="node-report">
+                        <div class="progress-bar progress-bar-default " role="progressbar " aria-valuenow="10"
+                             aria-valuemin="0" aria-valuemax="100" style="width: 0%">0%
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 col-lg-12">
+                    <label for="">任务日志：</label>
+
+                    <div class="well task-log">
+                    </div>
+                </div>
+                <!--  panel left--></div>
+
+            <div class="col-lg-6 col-md-6">
+                <p>涉及节点：</p>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered " id="rawnodes">
+                        <thead>
+                        <tr>
+                            <td>节点名称</td>
+                            <td>节点描述</td>
+                            <td>IP地址</td>
+                            <td>服务器类型</td>
+                            <td>操作系统</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {%for node in nodes%}
+                             <tr id='{{node.id}}'>
+                                <td>{{node.name}}</td>
+                                <td>{{node.introduction}}</td>
+                                <td>{{node.ip}}</td>
+                                <td>{{node.type}}</td>
+                                <td>{{node.os}}</td>    
+                            </tr>
+                        {%endfor%}
+                        </tbody>
+                    </table>
+                </div>
+                <!--  panel right--></div>
+        </div>
+    </div>
+
+    <div class="well node-status">
+        <div class="row">
+
+            <div class="col-lg-4">
+                
+                </div>
+            <div class="col-lg-5 col-lg-offset-1 text-center" >
+                
+            </div>
+        </div>
+        <div class="container">
+            <div class="col-md-3">
+                <span>节点实时状态:</span>
+                <select>
+                    <option>Ubuntu12</option>
+                    <option>CentOS</option>
+                    <option>Windows</option>
+                </select>
+                <div class="btn-nodeparam">
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#argModal" >节点参数选择</button>
+                </div>
+                <table class="table table-striped table-hover table-bordered" id="mon" style="margin-top:10px">
+                    <tr id="CPU1" >
+                        <td style="width:80%">
+                           系统CPU利用率(Sys%)
+                        </td>
+                        <td id="cpuValue" >
+                            0
+                        </td>
+                    </tr>
+                    <tr id="IO1">
+                        <td>
+                            内存使用率(Memory%)
+                        </td>
+                        <td id="ioValue">
+                            0
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-9" >
+            <h4 class="text-center">系统运行情况概览</h4>
+            <div id="cpu_io" class="pull-center" style="height:400px"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <a class="btn btn-primary pull-right a-btn" href="index.html">
+                <i class="fa fa-chevron-left fa-fw"></i>
+                返回
+            </a>
+        </div>
+        <!--well end--></div>
+    <!--container end--></div>
+
+
+
+<div class="modal fade" id="argModal" tabindex="-1" role="dialog" aria-labelledby="comfirmModalLabel" style="width: 60%; margin:auto">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h3 class="text-left">选择图表的参数</h3>
+                <div class="taskParam clearfix">
+                                <div class="col-md-6 param-level " >
+                                    <div class="list-group" style="margin: 0">
+                                        <a class="list-group-item " id="CPU-param">
+                                            CPU
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item " id="Memory-param">
+                                            Memory
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item" id="Network-param">
+                                            Network
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item " id="IO-param">
+                                            I/O
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 param-sublevel" style="display:none" id="CPU-params">
+                                    <div class="list-group" style="margin: 0">
+                                        <a class="list-group-item CPUparam active" val="Sys">
+                                            系统CPU利用率(Sys%)
+                                        </a>
+                                        <a class="list-group-item CPUparam" val="User">
+                                            用户CPU利用率(User%)
+                                        </a>
+                                        <a class="list-group-item CPUparam" val="Wait">
+                                            CPU等待率(Wait%)
+                                        </a>
+                                        <a class="list-group-item CPUparam" val="Idle">
+                                            CPU空闲率(Idle%)
+                                        </a>
+                                        <a class="list-group-item CPUparam" val="Gflops">
+                                            浮点计算性能(Float-point Gflops)
+                                        </a>
+                                        <a class="list-group-item CPUparam" val="Quantitative">
+                                            向量化比例(Quantitative %)
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="Memory-params">
+                                    <div class="list-group" style="margin: 0">
+                                        <a class="list-group-item Memoryparam active" val="Memory">
+                                            内存使用率(Memory%)
+                                        </a>
+                                        <a class="list-group-item Memoryparam" val="Swap">
+                                            Swap使用率(Swap%)
+                                        </a>
+                                        <a class="list-group-item Memoryparam" val="MemoryRead">
+                                            内存带宽读速率(MemoryRead GB/s)
+                                        </a>
+                                        <a class="list-group-item Memoryparam" val="MemoryWrite">
+                                            内存带宽写速率(MemoryWrite GB/s)
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="Network-params">
+                                    <div class="list-group" style="margin: 0">
+                                        <a class="list-group-item Networkparam" val="NetSend">
+                                            网络发送速度(NetSend MB/s)
+                                        </a>
+                                        <a class="list-group-item Networkparam " val="NetRec">
+                                            网络接受速度(NetRec MB/s)
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="IO-params">
+                                    <div class="list-group" style="margin: 0">
+                                        <a class="list-group-item IOparam" val="DiskRead">
+                                            磁盘读速率(DiskRead KB/s)
+                                        </a>
+                                        <a class="list-group-item IOparam" val="DiskWrite">
+                                            磁盘读速率(DiskWrite KB/s)
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+            </div>
+            <div class="modal-footer pull-center">
+
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    取消
+                </button>
+                 <button type="button" class="btn btn-primary" name="confirm" id="argConfirm" data-dismiss="modal">
+                    确定
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+
+
+{% block javascript %}
+<script src="{% static "js/echarts.js"%}"></script>
+<script src="{% static "js/SystemChart.js"%}"></script>
+{% endblock %}

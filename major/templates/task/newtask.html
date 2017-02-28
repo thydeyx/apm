@@ -1,0 +1,1053 @@
+{% extends "base/page-base.html" %}
+{% block title %}新建任务{% endblock %}
+
+{% block css %}
+{% load staticfiles %}
+<link rel="stylesheet" type="text/css" href="{% static "css/compiled/newtask.css"%}"/>
+<link type="text/css" href="{% static "css/lib/jquery-ui-1.10.3.custom.css"%}" rel="stylesheet" />
+{% endblock %}
+
+{% block side-nav %}
+{% include "side-nav/side-nav-index.html" %}
+{% endblock %}
+{% block content %}
+<!-- main container -->
+
+<div class="content container">
+    <div class="row">
+        <ol class="breadcrumb">
+            <span>当前所在位置：</span>
+            <li>
+                <a href="/index/page/1">任务</a>
+            </li>
+            <li class="active">新建任务</li>
+        </ol>
+    </div>
+    <div class="row">
+        <div class="panel panel-default">
+            <div class="panel-heading clearfix">
+                <h2 class="pull-left">新建任务</h2>
+            </div>
+            <div class="panel-body">
+
+               <div class="tab-1 clearfix">
+                    <div class="process-bar clearfix">
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>任务概述</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>作业类型</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>测试环境</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>参数设置</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>确认</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+                    </div>
+                    <form class="clearfix">
+                        <div class="col-md-5 col-lg-offset-1">
+                            <div class="form-group">
+                                <label for="TaskName">任务名称：</label>
+                                <input type="text" class="form-control" id="TaskName" placeholder="输入任务名称">
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label for="TaskDescription">任务描述：</label>
+                                <textarea id="TaskDescription" class="form-control" rows="1"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="clearfix col-lg-offset-1">
+                            <a>
+                                <div class="col-md-5 btn btn-choose-model btn-next-single" >
+                                    <div class="row" href="#"><i class="fa fa-minus i-type" ></i></div>
+                                    <p class="test-type">基准测试</p>
+                                </div>
+                            </a>
+                            <a>
+                                <div class="col-md-5 btn btn-choose-model btn-next-regress">
+                                    <div class="row" href="#"><i class="fa fa-refresh i-type"></i></div>
+                                    <p class="test-type">回归测试</p>
+                                </div>
+                            </a>
+                    </div>
+
+                    <div class="pull-right">
+                        <a href="/index/page/1" class="btn btn-default a-btn">返回首页
+                        </a>
+                   <!--     <a class="btn btn-primary a-btn btn-next">下一步</a>-->
+                    </div>
+                </div>
+
+                <div class="tab-2 tab-2-1-1 clearfix" style="display:none">
+                    <div class="process-bar clearfix">
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>任务概述</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>作业类型</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>测试环境</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>参数设置</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>确认</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+                    </div>
+                    <form class="TypeAndNode clearfix">
+                        <div class="col-md-12">
+                            <div class="col-md-10 col-lg-offset-1">
+                                <label>选择作业流：</label>
+                                <select class="form-control" id="jobStream">
+                                    <option>请选择作业流</option>
+                                    {% for jobstream in jobstreams %}
+                                    <option>{{jobstream.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% for jobstream in jobstreams %}
+                             <div class="col-md-10 col-lg-offset-1" >
+                                 <table id="{{ jobstream.name }}" class=" table table-hover table-responsive table-bordered" style=" width:100%;display:none" >
+                                     <thead>
+                                        <tr>
+                                            <th>产品名</th>
+                                            <th>产品模式</th>
+                                        </tr>
+                                     </thead>
+                                        <tbody>
+                                        {% for job in jobstream.jobs.all %}
+                                        <tr>
+                                            <td>{{job.name}}</td>
+                                            <td>
+                                                <select>
+                                                    {% for mode in job.runmode.all %}
+                                                     <option name="{{ job.name }}" value="{{ mode.id }}">{{ mode.name}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                     </tbody>
+                                 </table>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                    </form>
+
+                    <div class="col-md-12 col-lg-12">
+                        <a class="btn btn-primary pull-right a-btn btn-next">下一步</a>
+                        <a class="btn btn-default pull-right a-btn btn-pre">上一步</a>
+                    </div>
+                </div>
+
+
+                <div class="tab-2 tab-2-2 clearfix" style="display:none">
+                    <div class="process-bar clearfix">
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>任务概述</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                         <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>作业类型</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+
+
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>参数设置</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>确认</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+                    </div>
+                    <form class="TypeAndNode clearfix">
+                        <div class="col-md-2">
+                          <label>选择作业流：</label>
+                          <select class="form-control" id="jobStream">
+                              <option>请选择作业流</option>
+                              {% for jobstream in jobstreams %}
+                              <option>{{jobstream.name}}</option>
+                              {% endfor %}
+                          </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>设置监测时间：</label>
+                            <div class="container">
+                                <div class="col-md-12">
+                                    <div class="input-group date">
+                                        <input type="text" class="form-control" id="begintime" value="开始时间">
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="input-group date">
+                                        <input type="text" class="form-control" id="endtime" value="结束时间">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="col-md-12 col-lg-12">
+                        <a class="btn btn-primary pull-right a-btn btn-next">下一步</a>
+                        <a class="btn btn-default pull-right a-btn btn-pre">上一步</a>
+                    </div>
+                </div>
+
+            <div class="tab-5 clearfix" style="display:none">
+                    <div class="process-bar clearfix">
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>任务概述</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>作业类型</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                         <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>测试环境</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>参数设置</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>确认</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+                    </div>
+                    <form class="TypeAndNode clearfix">
+                    <div class="col-md-12">
+                        <div class="col-md-5">
+                                <label><br/>选择部署环境：</label>
+                                <table class="table table-hover thead">
+                                    <thead>
+                                        <tr>
+                                            <td>环境名称</td>
+                                            <td>环境概述</td>
+                                            <td>配置节点</td>
+                                        </tr>
+                                    </thead>
+                                </table>
+                                <div class="well">
+                                <table class="table table-hover table-responsive">
+                                    <tbody class="mainBody body1">
+                                    {% for environment in environments %}
+                                        <tr>
+                                            <td><span id="environment_name">{{environment.name}}</span></td>
+                                            <td>{{environment.description}}</td>
+                                            <td id="node-related">
+                                                {% for node in environment.node.all %}
+                                                    {{node.name}}<br>
+                                                {% endfor %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                                </div>
+                            </div>
+                        <div class="col-md-2 btn-taskcontrol clearfix" style="top:80px;">
+                           <a class="btn btn-default" id="addNodestask">添加<i class="fa fa-fw fa-chevron-right"></i></a>
+                           <a class="btn btn-danger" id="delNodestask"><i class="fa fa-fw fa-chevron-left"></i> <span>移除</span></a>
+                        </div>
+                        <div class="col-md-5 node-task">
+                            <div class="col-md-12">
+                                <label><br/>已添加的作业流与部署环境：</label>
+                            </div>
+                            <div class="well col-md-12 top" id="well-nodes">
+                            </div>
+
+                            <select multiple class="form-control" id="selected-node-task" style="display:none">
+                            </select>
+                        </div>
+                    </div>
+                    </form>
+
+                    <form class="simulationEnvironment clearfix">
+                        <div class="col-md-5">
+                            <div class="col-md-12">
+                                <label><br/>选择对比环境：</label>
+                                <table class="table table-hover thead">
+                                    <thead>
+                                        <tr>
+                                            <td>环境名称</td>
+                                            <td>环境概述</td>
+                                            <td>部署环境</td>
+                                        </tr>
+                                    </thead>
+                                </table>
+                                <div class="well">
+                                    <table class="table table-hover table-responsive">
+                                        <tbody class="mainBody body2">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 btn-taskcontrol clearfix" style="top:80px;">
+                           <a class="btn btn-default" id="addSimulationEnvironment">添加<i class="fa fa-fw fa-chevron-right"></i></a>
+                           <a class="btn btn-danger" id="delSimulationEnvironment"><i class="fa fa-fw fa-chevron-left"></i> <span>移除</span></a>
+                        </div>
+                        <div class="col-md-5 node-task">
+                            <div class="col-md-12">
+                                <label><br/>已添加的对比环境：</label>
+                            </div>
+                            <div class="well col-md-12 top" id="well-environments">
+                            </div>
+                            <select multiple class="form-control" id="selected-environment-task" style="display:none">
+                            </select>
+                        </div>
+
+                    </form>
+
+                    <div class="col-md-12 col-lg-12">
+                        <a class="btn btn-primary pull-right a-btn btn-next">下一步</a>
+                        <a class="btn btn-default pull-right a-btn btn-pre">上一步</a>
+                    </div>
+                </div>
+
+
+                <div class="tab-3 tab-3-1-1 clearfix" style="display:none">
+                    <div class="process-bar clearfix">
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>任务概述</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>作业类型</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>测试环境</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>参数设置</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>确认</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+                    </div>
+                    <div class="manage-bar col-md-1">
+                        <div class="user-system-config-default btn-system">系统配置模板</div>
+                        <div class="user-system-config-active btn-user">用户自定义</div>
+                    </div>
+                    <div class="col-md-10" style="margin-left: 50px;">
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="optionRadios3" id="origindata1">原始数据
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="optionRadios3" id="predata1" checked>预处理数据
+                            </label>
+                        </div>
+                    </div>
+                    <form class="clearfix form-inline">
+                        <div class="col-md-5" style="margin-left: 50px;">
+                            <label for="">任务检测参数：</label>
+                            <div class="taskParam clearfix">
+                                <div class="col-md-6 param-level">
+                                    <div class="list-group">
+                                        <a class="list-group-item " id="CPU-param">
+                                            CPU
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item " id="Memory-param">
+                                            Memory
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item" id="Network-param">
+                                            Network
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item " id="IO-param">
+                                            I/O
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item " id="NFS-param">
+                                            NFS
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 param-sublevel" style="display:none" id="CPU-params">
+                                    <div class="list-group">
+                                        {% for CPU in CPUs %}
+                                            <a class="list-group-item CPUparam">
+                                                {{CPU.name}}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="Memory-params">
+                                    <div class="list-group">
+                                        {% for Memory in Memorys %}
+                                            <a class="list-group-item Memoryparam">
+                                                {{Memory.name}}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="Network-params">
+                                    <div class="list-group">
+                                        {% for Network in Networks %}
+                                            <a class="list-group-item Networkparam">
+                                                {{Network.name}}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="IO-params">
+                                    <div class="list-group">
+                                        {% for IO in IOs %}
+                                            <a class="list-group-item IOparam">
+                                                {{IO.name}}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="NFS-params">
+                                    <div class="list-group">
+                                        {% for NFS in NFSs %}
+                                            <a class="list-group-item NFSparam">
+                                                {{NFS.name}}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5 param-box">
+                            <div class="param-box-title">
+                                <label for="">已选参数列表：</label>
+                                <select class="form-control">
+                                    <option value="total">所有参数</option>
+                                    <option value="cpu">CPU参数</option>
+                                    <option value="memory">Memory参数</option>
+                                    <option value="network">Network参数</option>
+                                    <option value="io">I/O参数</option>
+                                    <option value="nfs">NFS参数</option>
+                                </select>
+                            </div>
+                            <div class="list-group sltparams">
+                            </div>
+                        </div>
+                    </form>
+                    <div class="col-md-12 clearfix">
+                        <a class="btn btn-primary pull-right a-btn btn-next">下一步</a>
+                        <a class="btn btn-default pull-right a-btn btn-pre">上一步</a>
+                    </div>
+                </div>
+
+                <div class="tab-3 tab-3-2-1 clearfix" style="display:none;">
+                    <div class="process-bar clearfix">
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>任务概述</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>作业类型</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>测试环境</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>参数设置</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>确认</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+                    </div>
+                    <div class="manage-bar col-md-1">
+                        <div class="user-system-config-default btn-system">系统配置模板</div>
+                        <div class="user-system-config-active btn-user">用户自定义</div>
+                    </div>
+                    <div class="col-md-10" style="margin-left: 50px;">
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="optionRadios4" id="origindata2">原始数据
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="optionRadios4" id="predata2" checked>预处理数据
+                            </label>
+                        </div>
+                    </div>
+                    <form class="clearfix form-inline">
+                        <div class="col-md-5" style="margin-left: 50px;">
+                            <label for="">任务检测参数：</label>
+                            <div class="taskParam clearfix">
+                                <div class="col-md-6 param-level">
+                                    <div class="list-group">
+                                        <a class="list-group-item " id="CPU-param">
+                                            CPU
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item " id="Memory-param">
+                                            Memory
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item" id="Network-param">
+                                            Network
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item " id="IO-param">
+                                            I/O
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                        <a class="list-group-item " id="NFS-param">
+                                            NFS
+                                            <i class="fa fa-chevron-right pull-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 param-sublevel" style="display:none" id="CPU-params">
+                                    <div class="list-group">
+                                        {% for CPU in CPUs %}
+                                            <a class="list-group-item CPUparam">
+                                                {{CPU.name}}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="Memory-params">
+                                    <div class="list-group">
+                                        {% for Memory in Memorys %}
+                                            <a class="list-group-item Memoryparam">
+                                                {{Memory.name}}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="Network-params">
+                                    <div class="list-group">
+                                        {% for Network in Networks %}
+                                            <a class="list-group-item Networkparam">
+                                                {{Network.name}}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="IO-params">
+                                    <div class="list-group">
+                                        {% for IO in IOs %}
+                                            <a class="list-group-item IOparam">
+                                                {{IO.name}}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 param-sublevel" style="display:none" id="NFS-params">
+                                    <div class="list-group">
+                                        {% for NFS in NFSs %}
+                                            <a class="list-group-item NFSparam">
+                                                {{NFS.name}}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5 param-box">
+                            <div class="param-box-title">
+                                <label for="">已选参数列表：</label>
+                                <select class="form-control">
+                                    <option value="total">所有参数</option>
+                                    <option value="cpu">CPU参数</option>
+                                    <option value="memory">Memory参数</option>
+                                    <option value="network">Network参数</option>
+                                    <option value="io">I/O参数</option>
+                                    <option value="nfs">NFS参数</option>
+                                </select>
+                            </div>
+                            <div class="list-group sltparams">
+                            </div>
+                        </div>
+                    </form>
+                    <div class="col-md-12 clearfix">
+                        <a class="btn btn-primary pull-right a-btn btn-next">下一步</a>
+                        <a class="btn btn-default pull-right a-btn btn-pre">上一步</a>
+                    </div>
+                </div>
+
+                <div class="tab-3 tab-3-1-2 clearfix" style="display:none">
+                    <div class="process-bar clearfix">
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>任务概述</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>作业类型</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>测试环境</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>参数设置</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>确认</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+                    </div>
+
+                    <div class="manage-bar col-md-1">
+                        <div class="user-system-config-active btn-system">系统配置模板</div>
+                        <div class="user-system-config-default btn-user">用户自定义</div>
+                    </div>
+                    <div class="col-md-10 clearfix" style="margin-left: 50px;">
+                        <div class="col-md-12">
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="optionsRadios1" id="originData3">原始数据
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="optionsRadios1" id="preData3" checked>预处理数据
+                                </label>
+                            </div>
+                        </div>
+                        <label>选择参数配置模板：</label>
+                        <div class="main-box-body clearfix">
+                        <div class="table-responsive clearfix">
+                            <table class="table table-hover" id="paraList">
+                                <thead>
+                                <tr>
+                                    <th>
+                                        <span>模板名称</span>
+                                    </th>
+                                    <th>
+                                        <span>模板概述</span>
+                                    </th>
+                                    <th>
+                                        <span>建议任务检测参数</span>
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody id="mainBody">
+                                    {% for template in templates %}
+                                        <tr class="system-model" id="{{ template.id }}">
+                                            <td>{{template.name}}</td>
+                                            <td>{{template.description}}</td>
+                                            <td >
+                                                {% for parameter in template.parameter.all %}
+                                                    <span class="related_para">{{parameter.name}}</span><br/>
+                                                {% endfor %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div class="col-md-12 col-lg-12">
+                        <a class="btn btn-primary pull-right a-btn btn-next">下一步</a>
+                        <a class="btn btn-default pull-right a-btn btn-pre">上一步</a>
+                    </div>
+                </div>
+
+                <div class="tab-3 tab-3-2-2 clearfix" style="display:none">
+                    <div class="process-bar clearfix">
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>任务概述</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>作业类型</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>测试环境</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>参数设置</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left"></div>
+                        <div class="process-bar-md">
+                            <p>确认</p>
+                        </div>
+                        <div class="process-bar-right"></div>
+                    </div>
+
+                    <div class="manage-bar col-md-1">
+                        <div class="user-system-config-active btn-system">系统配置模板</div>
+                        <div class="user-system-config-default btn-user">用户自定义</div>
+                    </div>
+                    <div class="col-md-10 clearfix" style="margin-left: 50px;">
+                        <div class="col-md-12">
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="optionsRadios2" id="originData4">原始数据
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="optionsRadios2" id="preData4" checked>预处理数据
+                                </label>
+                            </div>
+                        </div>
+                        <label>选择参数配置模板：</label>
+                        <div class="main-box-body clearfix">
+                        <div class="table-responsive clearfix">
+                            <table class="table table-hover" id="paraList">
+                                <thead>
+                                <tr>
+                                    <th>
+                                        <span>模板名称</span>
+                                    </th>
+                                    <th>
+                                        <span>模板概述</span>
+                                    </th>
+                                    <th>
+                                        <span>建议任务检测参数</span>
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody id="mainBody">
+                                    {% for template in templates %}
+                                        <tr class="system-model" id="{{ template.id }}">
+                                            <td>{{template.name}}</td>
+                                            <td>{{template.description}}</td>
+                                            <td >
+                                                {% for parameter in template.parameter.all %}
+                                                    <span class="related_para">{{parameter.name}}</span><br/>
+                                                {% endfor %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div class="col-md-12 col-lg-12">
+                        <a class="btn btn-primary pull-right a-btn btn-next">下一步</a>
+                        <a class="btn btn-default pull-right a-btn btn-pre">上一步</a>
+                    </div>
+                </div>
+
+                <div class="tab-4 clearfix" style="display:none">
+                    <div class="process-bar clearfix">
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>任务概述</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>作业类型</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>测试环境</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>参数设置</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <<div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>确认</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+                    </div>
+                    <form action="#">
+                        <div class="row">
+                            <div class="col-md-12 col-lg-12">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>任务名称：</label>
+                                        <label class="TaskName">admin</label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="TaskCreater">创建者：</label>
+                                        <label for="">{{username}}</label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>任务类型：</label>
+                                        <label class="TaskType"></label>
+                                    </div>
+                                    <div>
+                                        <label for="TaskDescription">任务描述：</label>
+                                        <label class="TaskDescription"><p></p></label>
+                                    </div>
+                                    <div>
+                                        <label for="TaskJobStream">作业流：</label>
+                                        <label class="TaskJobStream"></label>
+                                    </div>
+                                    <div>
+                                        <label for="TaskData">数据类型：</label>
+                                        <label class="TaskData"></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-lg-6">
+                                <div class="col-lg-12">
+                                    <label>产品及模式：</label>
+                                </div>
+                                <div class="col-md-12 TaskJobModes">
+                                    <table class=" table table-hover table-responsive table-bordered" >
+                                     <thead>
+                                        <tr>
+                                            <th>产品名</th>
+                                            <th>产品模式</th>
+                                        </tr>
+                                     </thead>
+                                     <tbody>
+                                     </tbody>
+                                   </table>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-lg-6">
+                                <div class="col-lg-12">
+                                    <label>部署环境及对比环境：</label>
+                                </div>
+                                <div class="col-md-12 relate-nodes"></div>
+                                <label>涉及参数：</label>
+                                <div class="relate-params"></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12">
+                                <a class="btn btn-primary pull-right a-btn btn-next" id="btnNewTaskConfirm">确认</a>
+                                <a class="btn btn-default pull-right a-btn btn-pre">上一步</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tab-4-2 clearfix" style="display:none">
+                    <div class="process-bar clearfix">
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>任务概述</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>作业类型</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>测试环境</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>参数设置</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+
+                        <div class="process-bar-left-active"></div>
+                        <div class="process-bar-md-active">
+                            <p>确认</p>
+                        </div>
+                        <div class="process-bar-right-active"></div>
+                    </div>
+                    <form action="#">
+                        <div class="row">
+                            <div class="col-md-12 col-lg-12">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>任务名称：</label>
+                                        <label class="TaskName">admin</label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="TaskCreater">创建者：</label>
+                                        <label for="">{{username}}</label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>任务类型：</label>
+                                        <label class="TaskType"></label>
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="TaskDescription">任务描述：</label>
+                                      <label class="TaskDescription"><p></p></label>
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="JobStream">作业流：</label>
+                                      <label class="JobStream"><p></p></label>
+                                    </div>
+                                    <div>
+                                        <label for="TaskData">数据类型：</label>
+                                        <label class="TaskData"></label>
+                                    </div>
+                                </div>
+                            </div>
+<!--
+                            <div class="col-md-6 col-lg-6">
+                                <div class="col-lg-12">
+                                    <label>涉及作业流及部署环境：</label>
+                                </div>
+                                <div class="col-md-12 relate-nodes"></div>
+                            </div>
+-->
+                            <div class="col-md-6 col-lg-6">
+                              <div class="col-lg-12">
+                                <label>涉及参数：</label>
+                              </div>
+                                <div class="relate-params"></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12">
+                                <a class="btn btn-primary pull-right a-btn btn-next" id="btnNewTaskConfirm">确认</a>
+                                <a class="btn btn-default pull-right a-btn btn-pre">上一步</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            <!-- pannel body end--></div>
+        </div>
+    </div>
+<!-- end container -->
+</div>
+
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static "js/page/newtask.js"%}"></script>
+<script type="text/javascript" src="{% static "js/lib/jquery.js"%}"></script>
+<script type="text/javascript" src="{% static "js/lib/jquery-ui-1.10.3.custom.js"%}"></script>
+<script type="text/javascript" src="{% static "js/lib/jquery-ui-timepicker-addon.js"%}"></script>
+<script type="text/javascript">
+    $(function() {
+        // 时间设置
+        $('#begintime').datetimepicker({
+            showSecond: true,
+            timeFormat: 'hh:mm:ss',
+            dateFormat: 'yy-mm-dd',
+        });
+        var $beginTime = $("#begintime")[0].value;
+        $('#endtime').datetimepicker({
+            showSecond: true,
+            timeFormat: 'hh:mm:ss',
+            dateFormat: 'yy-mm-dd',
+            minDate: $beginTime,
+        });
+    });
+</script>
+{% endblock %}
